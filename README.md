@@ -25,7 +25,7 @@ Uma aplicação gráfica que desnuda fundos de imagens com um toque neural, base
 
 ```bash
 # Clone o repositório:
-git clone https://github.com/AndreBFarias/FogStripper.git
+git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
 cd FogStripper
 # Crie um ambiente virtual e instale as dependências:
 python3 -m venv venv
