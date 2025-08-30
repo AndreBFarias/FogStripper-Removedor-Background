@@ -76,6 +76,7 @@ chmod +x uninstall.sh
 
 
 ## Dependências do Projeto
+<<<<<<< HEAD
 
 As dependências do Python estão listadas no arquivo
 
@@ -91,3 +92,19 @@ As dependências do Python estão listadas no arquivo
 ### Licença GLP
 Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
 
+=======
+
+As dependências do Python estão listadas no arquivo
+
+`requirements.txt` e são gerenciadas automaticamente pelo script de instalação.
+
+- **PyQt6**: Para a interface gráfica.
+    
+- **rembg[gpu]**: Para a remoção de fundo com aceleração de GPU.
+    
+- **Pillow**: Para a manipulação de imagens.
+
+
+### Licença GLP
+Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
+>>>>>>> 597c5958dc086cb7adb6a07e7619f5a1d553f983
