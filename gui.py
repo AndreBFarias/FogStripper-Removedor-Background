@@ -1,3 +1,4 @@
+#1
 import os
 from PyQt6.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, QMessageBox, QProgressBar, QSlider, QFrame, QHBoxLayout
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap
@@ -5,10 +6,12 @@ from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QDesktopServices
 from processor import ProcessThread
 
+#2
 class DesnudadorWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Desnudador de Névoas")
+#3
+        self.setWindowTitle("FogStripper")
         self.showMaximized()
         self.setAcceptDrops(True)
         
@@ -29,7 +32,8 @@ class DesnudadorWindow(QWidget):
         
         # Icon label with relative path
         self.icon_label = QLabel()
-        logo_path = os.path.join(os.path.dirname(__file__), 'desnundador.png')
+#4
+        logo_path = os.path.join(os.path.dirname(__file__), 'assets', 'desnudador.png')
         if os.path.exists(logo_path):
             pixmap = QPixmap(logo_path)
         else:
@@ -118,9 +122,10 @@ class DesnudadorWindow(QWidget):
     def finish_image(self, output_path, input_paths):
         if output_path:
             msg = QMessageBox(self)
-            msg.setWindowTitle("Êxtase Completado")
-            msg.setText(f"Imagem despida em: {output_path}")
-            view_button = QPushButton("Visualizar Gerado")
+#5
+            msg.setWindowTitle("Processo Concluído")
+            msg.setText(f"Imagem processada salva em: {output_path}")
+            view_button = QPushButton("Abrir Pasta")
             view_button.clicked.connect(lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(output_path))))
             msg.addButton(view_button, QMessageBox.ButtonRole.ActionRole)
             msg.exec()
