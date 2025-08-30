@@ -76,7 +76,6 @@ chmod +x uninstall.sh
 
 
 ## Dependências do Projeto
-<<<<<<< HEAD
 
 As dependências do Python estão listadas no arquivo
 
