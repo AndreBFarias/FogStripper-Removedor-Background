@@ -91,7 +91,6 @@ As dependências do Python estão listadas no arquivo
 ### Licença GLP
 Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
 
-=======
 
 As dependências do Python estão listadas no arquivo
 
