@@ -12,10 +12,13 @@
 </div>
 Uma aplicação gráfica que desnuda fundos de imagens com um toque neural, baseada no modelo U2Net e acelerada por GPU via CUDA. Open source, desenhada para quem busca eficiência e privacidade em cada camada revelada.
 ---
+
+<center>
 <div style="text-align: center;">
-  <h3 style="font-size: 2em;">Interface</h3>
-  <img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="600" alt="Screenshot do FogStripper" style="display: block; margin: 0 auto;">
+  <h3 style="font-size: 2em;">Interface</h3>
+  <img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
 </div>
+</center>
 
 ---
 
