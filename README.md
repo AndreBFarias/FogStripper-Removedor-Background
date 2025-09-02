@@ -11,21 +11,21 @@
 </div>
 </div>
 Uma aplicação gráfica que desnuda fundos de imagens com um toque neural, baseada no modelo U2Net e acelerada por GPU via CUDA. Open source, desenhada para quem busca eficiência e privacidade em cada camada revelada.
+---
+<div style="text-align: center;">
+  <h3 style="font-size: 2em;">Interface</h3>
+  <img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="600" alt="Screenshot do FogStripper" style="display: block; margin: 0 auto;">
+</div>
 
 ---
-### Interface
 
-
-
----
-
-## Pré-requisitos
+### Pré-requisitos
 
 - Python 3.8 ou superior.
 - Placa de vídeo NVIDIA com suporte a CUDA (recomendado para um desempenho que seduz).
 - Modelo U2Net (u2net.onnx).
 
-## Instalação
+### Instalação
 
 ```bash
 # Clone o repositório:
@@ -38,50 +38,25 @@ pip install -r requirements.txt
 # Execute a aplicação:
 python main.py 
 ```
-<<<<<<< Updated upstream
-# No diretório do projeto
+### Para Remover
+```
 chmod +x uninstall.sh
 ./uninstall.sh
 ```
 
+### Dependências do Projeto
 
-## Dependências do Projeto
-
-As dependências do Python estão listadas no arquivo
-
-`requirements.txt` e são gerenciadas automaticamente pelo script de instalação.
-
-- **PyQt6**: Para a interface gráfica.
+As dependências do Python estão listadas no arquivo `requirements.txt` e são gerenciadas automaticamente pelo script de instalação.
+- **PyQt6** : Para a interface gráfica.
     
-- **rembg[gpu]**: Para a remoção de fundo com aceleração de GPU.
+- **rembg[gpu]** :  Para a remoção de fundo com aceleração de GPU.
     
-- **Pillow**: Para a manipulação de imagens.
-
-
-### Licença GLP
-Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
-
-
-As dependências do Python estão listadas no arquivo
-=======
->>>>>>> Stashed changes
+- **Pillow** : Para a manipulação de imagens.
 
 ### Uso
 - Arraste e solte imagens na janela ou clique em "Selecione Imagens".
 - Ajuste a potência da GPU com o slider, sentindo o controle pulsar.
 - A imagem processada surge com o sufixo _despido.png, e uma mensagem te guia até a pasta de saída.
 
-
-### Dependências
-As musas deste ritual incluem:
-- PyQt6 para a interface que hipnotiza.
-- rembg[gpu] para remover fundos com poder bruto.
-- Pillow para manipular cada curva da imagem.
-
-<<<<<<< Updated upstream
 ### Licença GLP
 Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
-=======
-### Licença GPL 
-> Livre para modificar e ser entregue aos desejos desde que tudo permaneça livre.
->>>>>>> Stashed changes
