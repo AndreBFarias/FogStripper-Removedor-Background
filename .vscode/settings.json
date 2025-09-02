@@ -1,0 +1,11 @@
+{
+    "workbench.editor.autoLockGroups": {
+        "mainThreadWebview-markdown.preview": true,
+        "workbench.input.interactive": true,
+        "jupyter-notebook": true,
+        "imagePreview.previewEditor": true,
+        "default": true,
+        "notebookOutputEditor": true
+    },
+    "workbench.editor.centeredLayoutFixedWidth": true
+}
