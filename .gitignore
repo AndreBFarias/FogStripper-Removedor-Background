@@ -2,7 +2,27 @@
 __pycache__/
 *.py[codz]
 *$py.class
+# Cache de modelos e outras bibliotecas
+cache/
 
+# Artefatos de build e distribuição
+estavel/
+
+# Logs e arquivos temporários
+*.log
+*.txt
+
+# Ambientes virtuais
+venv/
+.venv/
+
+# Arquivos de configuração de IDEs
+.vscode/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
 
 # C extensions
 *.so
