@@ -1,6 +1,12 @@
 import os
+import re
 import logging
 import subprocess
+import tempfile
+import shutil
+import numpy as np
+import imageio.v2 as imageio
+from PIL import Image
 from PyQt6.QtCore import QThread, pyqtSignal
 from config_loader import PATHS
 
@@ -9,76 +15,173 @@ logger = logging.getLogger(__name__)
 class ProcessThread(QThread):
     progress = pyqtSignal(int)
     finished = pyqtSignal(str)
+    error = pyqtSignal(str)
 
-    def __init__(self, input_path, apply_upscale, model_name, output_format, potencia):
+    def __init__(self, input_path, apply_upscale, model_name, output_format, potencia, tile_size):
         super().__init__()
         self.input_path = input_path
         self.apply_upscale = apply_upscale
         self.model_name = model_name
-        self.output_format = output_format.lower()
+        self.output_format = output_format if output_format.startswith('.') else f".{output_format}"
         self.potencia = potencia
+        self.tile_size = tile_size
+        self.temp_dir = tempfile.mkdtemp(prefix="fogstripper_")
+        self.is_animated = self.input_path.lower().endswith(('.gif', '.webm'))
 
     def run_command(self, command):
         logger.info(f"Executando: {' '.join(command)}")
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        if result.stdout: logger.info(f"Saída do worker: {result.stdout.strip()}")
-        if result.stderr: logger.warning(f"Avisos do worker: {result.stderr.strip()}")
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True, encoding='utf-8')
+            if result.stdout: logger.info(f"Saída do worker: {result.stdout.strip()}")
+            if result.stderr: logger.warning(f"Avisos do worker: {result.stderr.strip()}")
+            return True
+        except subprocess.CalledProcessError as e:
+            #2
+            # Registro Forense Aprimorado: Registra separadamente tudo que o servo disse e gritou.
+            logger.error(f"Worker falhou com código de saída {e.returncode}.")
+            if e.stdout:
+                logger.error(f"--- Saída Padrão (stdout) do Worker ---:\n{e.stdout.strip()}")
+            if e.stderr:
+                logger.error(f"--- Saída de Erro (stderr) do Worker ---:\n{e.stderr.strip()}")
+            return False
+        except FileNotFoundError as e:
+            logger.error(f"Comando não encontrado: {e}")
+            return False
+
+    def cleanup(self):
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
+        logger.info(f"Diretório temporário {self.temp_dir} limpo.")
 
     def run(self):
-        renamed_original_path = None
+        final_path = ""
+        original_backup_path = None
+        
+        base, _ = os.path.splitext(self.input_path)
+        clean_base = re.sub(r'\.bak$', '', base)
+        final_output_path = f"{clean_base}{self.output_format}"
+
         try:
             if not PATHS:
-                raise RuntimeError("Caminhos para os workers não foram carregados. A instalação pode estar corrompida.")
+                raise RuntimeError("Mapa da Criação (config.json) não foi carregado.")
 
-            base_name, original_ext = os.path.splitext(self.input_path)
-            renamed_original_path = f"{base_name}_original{original_ext}"
-            
-            if os.path.exists(renamed_original_path):
-                renamed_original_path = f"{base_name}_original_{os.urandom(4).hex()}{original_ext}"
-            os.rename(self.input_path, renamed_original_path)
-
-            path_after_rembg = f"{base_name}_temp_rembg.png"
-            
-            self.progress.emit(10)
-            logger.info("Invocando o Reino do Desnudamento...")
-            rembg_command = [
-                PATHS["PYTHON_REMBG"], PATHS["REMBG_SCRIPT"],
-                "--input", renamed_original_path,
-                "--output", path_after_rembg,
-                "--model", self.model_name,
-                "--potencia", str(self.potencia)
-            ]
-            self.run_command(rembg_command)
-            self.progress.emit(50)
-            
-            final_path = path_after_rembg
-            if self.apply_upscale:
-                path_after_upscale = f"{base_name}_despido.{self.output_format}"
-                logger.info("Invocando o Reino da Ampliação...")
-                self.progress.emit(60)
-                upscale_command = [
-                    PATHS["PYTHON_UPSCALE"], PATHS["UPSCALE_SCRIPT"],
-                    "--input", path_after_rembg,
-                    "--output", path_after_upscale
-                ]
-                self.run_command(upscale_command)
-                final_path = path_after_upscale
-                os.remove(path_after_rembg)
+            input_is_original = not re.search(r'\.bak$', base)
+            if input_is_original:
+                 original_backup_path = f"{clean_base}.bak{os.path.splitext(self.input_path)[1]}"
+                 shutil.move(self.input_path, original_backup_path)
+                 logger.info(f"Backup do arquivo original criado em: {original_backup_path}")
+                 processing_file = original_backup_path
             else:
-                 final_path = f"{base_name}_despido.{self.output_format}"
-                 os.rename(path_after_rembg, final_path)
+                 processing_file = self.input_path
 
-            self.progress.emit(100)
-            self.finished.emit(final_path)
+            if self.is_animated:
+                final_path = self.process_animation(processing_file, final_output_path)
+            else:
+                final_path = self.process_static_image(processing_file, final_output_path)
 
-        except (subprocess.CalledProcessError, RuntimeError) as e:
-            error_message = e.stderr if isinstance(e, subprocess.CalledProcessError) else str(e)
-            logger.error(f"Um dos reinos falhou ou o mapa está corrompido.\nErro: {error_message}")
-            if renamed_original_path and os.path.exists(renamed_original_path):
-                 os.rename(renamed_original_path, self.input_path)
-            self.finished.emit("")
+            if final_path and (os.path.exists(final_path) or os.path.isdir(final_path)):
+                self.finished.emit(final_path)
+            else:
+                raise RuntimeError("O artefato final (arquivo ou diretório) não foi gerado.")
+
         except Exception as e:
             logger.error(f"Erro no orquestrador: {e}", exc_info=True)
-            if renamed_original_path and os.path.exists(renamed_original_path):
-                 os.rename(renamed_original_path, self.input_path)
-            self.finished.emit("")
+            if original_backup_path and os.path.exists(original_backup_path):
+                shutil.move(original_backup_path, self.input_path)
+                logger.warning(f"Erro detectado. Backup restaurado para: {self.input_path}")
+            self.error.emit(str(e))
+        finally:
+            self.cleanup()
+    
+    def process_static_image(self, current_path, final_output_path):
+        is_svg_illusion = self.output_format == '.svg'
+        worker_output_format = '.png' if is_svg_illusion else self.output_format
+        rembg_output = os.path.join(self.temp_dir, f"processed{worker_output_format}")
+        
+        self.progress.emit(25)
+        rembg_cmd = [
+            PATHS.get("PYTHON_REMBG"), PATHS.get("REMBG_SCRIPT"),
+            "--input", current_path, "--output", rembg_output,
+            "--model", self.model_name, "--potencia", str(self.potencia)
+        ]
+        if not self.run_command(rembg_cmd):
+            raise RuntimeError("Falha no Reino do Desnudamento.")
+        self.progress.emit(50)
+
+        if self.apply_upscale:
+            upscale_output_format = '.png' if is_svg_illusion else self.output_format
+            upscale_output = os.path.join(self.temp_dir, f"upscaled{upscale_output_format}")
+            upscale_cmd = [
+                PATHS.get("PYTHON_UPSCALE"), PATHS.get("UPSCALE_SCRIPT"),
+                "--input", rembg_output, "--output", upscale_output,
+                "--tile", str(self.tile_size)
+            ]
+            if not self.run_command(upscale_cmd):
+                raise RuntimeError("Falha no Reino da Ampliação.")
+            final_temp_path = upscale_output
+            self.progress.emit(90)
+        else:
+            final_temp_path = rembg_output
+
+        shutil.move(final_temp_path, final_output_path)
+        return final_output_path
+
+    def process_animation(self, current_path, final_output_path):
+        logger.info("Invocando o Reino do Desnudamento para animação...")
+        
+        reader = imageio.get_reader(current_path)
+        try:
+            fps = reader.get_meta_data().get('fps', 30)
+            frames = [frame for frame in reader]
+        finally:
+            reader.close()
+        
+        num_frames = len(frames)
+        purified_frames = []
+
+        for i, frame in enumerate(frames):
+            frame_path = os.path.join(self.temp_dir, f"frame_{i:04d}.png")
+            Image.fromarray(frame).convert("RGBA").save(frame_path)
+            
+            processed_frame_path = os.path.join(self.temp_dir, f"processed_frame_{i:04d}.png")
+            rembg_cmd = [
+                PATHS.get("PYTHON_REMBG"), PATHS.get("REMBG_SCRIPT"),
+                "--input", frame_path, "--output", processed_frame_path,
+                "--model", self.model_name, "--potencia", str(self.potencia)
+            ]
+            if not self.run_command(rembg_cmd):
+                raise RuntimeError(f"Falha ao processar o quadro {i}.")
+            
+            with Image.open(processed_frame_path) as processed_img:
+                processed_img = processed_img.convert("RGBA")
+                purified_canvas = Image.new("RGBA", processed_img.size, (0, 0, 0, 0))
+                purified_canvas.paste(processed_img, (0, 0), processed_img)
+                purified_frames.append(purified_canvas)
+
+            self.progress.emit(int((i + 1) / num_frames * 90))
+
+        if self.output_format in ['.png', '.svg']:
+            output_dir = os.path.splitext(final_output_path)[0]
+            logger.info(f"Desmembrando animação em quadros estáticos em: {output_dir}")
+            os.makedirs(output_dir, exist_ok=True)
+            for i, p_frame in enumerate(purified_frames):
+                temp_save_path = os.path.join(output_dir, f"frame_{i:04d}.png")
+                p_frame.save(temp_save_path)
+                
+                final_frame_path = os.path.join(output_dir, f"frame_{i:04d}{self.output_format}")
+                
+                if temp_save_path != final_frame_path:
+                    shutil.move(temp_save_path, final_frame_path)
+
+            self.progress.emit(100)
+            return output_dir
+        else:
+            logger.info(f"Reconstruindo animação em {final_output_path}")
+            np_frames = [np.array(p_frame) for p_frame in purified_frames]
+            
+            if final_output_path.lower().endswith('.webm'):
+                imageio.mimsave(final_output_path, np_frames, fps=fps, codec='libvpx-vp9', pixelformat='yuva420p', quality=8)
+            else: # GIF
+                imageio.mimsave(final_output_path, np_frames, fps=fps, disposal=2)
+
+            self.progress.emit(100)
+            return final_output_path

@@ -2,22 +2,33 @@ import logging
 import os
 import sys
 
-def setup_logging():
-    log_dir = os.path.expanduser("~/.local/share/fogstripper")
-    os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, 'app.log')
+#2
+LOG_DIR = os.path.expanduser("~/.local/share/fogstripper")
+LOG_FILE = os.path.join(LOG_DIR, 'app.log')
 
-    if os.path.exists(log_file):
-        open(log_file, 'w').close()
+def get_log_path():
+    """Retorna o caminho completo para o arquivo de log."""
+    return LOG_FILE
+
+def setup_logging():
+    os.makedirs(LOG_DIR, exist_ok=True)
+
+    # Rotação de Log Simples: se o log for > 1MB, arquiva-o.
+    if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 1 * 1024 * 1024:
+        try:
+            os.rename(LOG_FILE, LOG_FILE + ".old")
+        except OSError as e:
+            print(f"Não foi possível rotacionar o arquivo de log: {e}")
 
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(message)s',
         handlers=[
-            logging.FileHandler(log_file),
+            logging.FileHandler(LOG_FILE),
             logging.StreamHandler(sys.stdout)
-        ]
+        ],
+        force=True
     )
     logging.info("="*50)
-    logging.info(f"Sistema de Log inicializado. Log salvo em: {log_file}")
+    logging.info(f"Sistema de Log inicializado. Log salvo em: {LOG_FILE}")
     logging.info("="*50)

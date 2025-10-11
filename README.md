@@ -2,29 +2,46 @@
 
 [![opensource](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](#)
 [![licença](https://img.shields.io/badge/licença-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Python](https://img.shields.io/badge/python-3.8+-green.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
 [![Estrelas](https://img.shields.io/github/stars/AndreBFarias/FogStripper.svg?style=social)](https://github.com/AndreBFarias/FogStripper/stargazers)
-[![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](https://github.com/AndreBFarias/FogStripper/issues)
+[![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
 
-<div align="center">
-  <h1 style="font-size: 2em;">FogStripper v2.0</h1>
-  <img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
+<h1 style="font-size: 2em;">FogStripper</h1>
+
+
 </div>
 
-Uma aplicação gráfica para Linux que remove fundos de imagens usando IA, com uma arquitetura de "Reinos Isolados" para garantir máxima estabilidade e evitar conflitos de dependências.
-
-### Funcionalidades
-- **Remoção de Fundo com IA:** Múltiplos modelos à sua escolha para diferentes tipos de imagem.
-- **Upscaling 4x Opcional:** Melhore a qualidade e a resolução da imagem final com Real-ESRGAN.
-- **Controle de Recursos:** Ajuste a "Potência" do recorte e o "Tamanho do Bloco" do upscale para gerenciar o uso de VRAM.
-- **Interface Intuitiva:** Arraste e solte, com pop-ups de confirmação e conclusão.
-- **Arquitetura Robusta:** Três ambientes Python (`venv`) isolados para a Interface, o `rembg` e o `realesrgan`, orquestrados por um processo principal.
+Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove fundos de imagens e vídeos usando modelos de redes neurais que rodam localmente, com uma arquitetura modularizada que permite estabilidade e evita problemas de conflitos.
 
 ---
+
+<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
+
+### Funcionalidades
+
+- **Remoção de Fundo com IA:** Múltiplos modelos (`rembg`) para diferentes tipos de imagem.
+- **Upscaling 4x Opcional:** Melhore a resolução e a qualidade da imagem final com `Real-ESRGAN`.
+- **Suporte a Animações:** Processe GIFs e WEBMs, extraindo e tratando cada quadro individualmente.
+- **Controle Fino de Recursos:**
+    - **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
+    - **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
+- **Interface Intuitiva:** Arraste e solte, com feedback claro e diálogos informativos de erro.
+- **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem nunca entrarem em conflito.
+
+### A Arquitetura
+
+O FogStripper tem três módulos principais. A estabilidade foi alcançada ao reconhecer que as bibliotecas de redes neurais modernas.
+
+1.  **Interface (`venv_gui`):** Onde a alma da aplicação (PyQt6) reside. Leve e ágil.
+2.  **Remoção da Névoa (`venv_rembg`):** Módulo isolado para `rembg`, que depende de um ecossistema específico de bibliotecas.
+3.  **Reino da Ampliação (`venv_upscale`):** Um universo congelado no tempo para `realesrgan` e suas versões precisas de `torch` e `numpy`, imune às quebras de compatibilidade do futuro.
+
+Esta separação, forçada pelo script `install.sh`, é a razão pela qual o FogStripper funciona de forma consistente.
 
 ### Instalação
 
 O script de instalação automatiza a criação de todos os reinos e dependências. Requer uma conexão com a internet.
+
 
 ```bash
 # Clone este repositório

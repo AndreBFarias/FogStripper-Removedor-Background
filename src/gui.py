@@ -1,28 +1,34 @@
 import os
 import logging
+import shutil
 from PyQt6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, 
-                             QMessageBox, QProgressBar, QSlider, QFrame, QHBoxLayout, 
-                             QCheckBox, QComboBox, QGridLayout)
+                             QMessageBox, QProgressBar, QSlider, QFrame, 
+                             QGridLayout, QComboBox, QCheckBox)
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QDesktopServices
 from processor import ProcessThread
+from logger_config import get_log_path
 
 logger = logging.getLogger(__name__)
 
 MODEL_DESCRIPTIONS = {
-    "u2net": "Modelo de uso geral, bom equilíbrio entre velocidade e precisão para objetos.",
-    "u2netp": "Versão 'light' do u2net. Mais rápido, mas com um pouco menos de detalhe.",
-    "u2net_human_seg": "Modelo de alta precisão, especializado e otimizado para recortar pessoas.",
-    "isnet-general-use": "Modelo moderno e pesado. Lento, mas com a melhor precisão para assuntos complexos."
+    "u2net": "Modelo de uso geral, bom equilíbrio entre velocidade e precisão.",
+    "u2netp": "Versão 'light' do u2net. Mais rápido, menos detalhe.",
+    "u2net_human_seg": "Alta precisão, especializado para recortar pessoas.",
+    "isnet-general-use": "Moderno e pesado. Lento, mas com a melhor precisão."
 }
 
-def create_styled_message_box(parent, title, text, icon=QMessageBox.Icon.NoIcon):
+#2
+def create_styled_message_box(parent, title, text, icon=QMessageBox.Icon.NoIcon, informative_text=""):
     msg_box = QMessageBox(parent)
     msg_box.setWindowTitle(title)
     msg_box.setText(text)
+    if informative_text:
+        msg_box.setInformativeText(informative_text)
     msg_box.setIcon(icon)
     msg_box.setStyleSheet("QLabel{ min-width: 450px; font-size: 13pt; } QPushButton{ font-size: 13pt; padding: 5px; }")
+    # Devolve a instância para que botões possam ser adicionados externamente
     return msg_box
 
 class DesnudadorWindow(QWidget):
@@ -30,13 +36,14 @@ class DesnudadorWindow(QWidget):
         super().__init__()
         self.setObjectName("FogStripper")
         self.setWindowTitle("FogStripper")
+        # ... (O resto do seu __init__ permanece o mesmo)
         self.setAcceptDrops(True)
         self.setFixedSize(800, 800)
         
         main_layout = QVBoxLayout(self)
         
         self.icon_label = QLabel()
-        logo_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'desnudador.png')
+        logo_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.png')
         pixmap = QPixmap(logo_path)
         self.icon_label.setPixmap(pixmap.scaled(150, 150, Qt.AspectRatioMode.KeepAspectRatio))
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -66,7 +73,7 @@ class DesnudadorWindow(QWidget):
 
         self.format_label = QLabel("Formato de Saída:")
         self.format_combo = QComboBox()
-        self.format_combo.addItems(["PNG", "WEBP"])
+        self.format_combo.addItems(["PNG", "SVG", "GIF", "WEBM"])
         settings_layout.addWidget(self.format_label, 2, 0)
         settings_layout.addWidget(self.format_combo, 2, 1)
 
@@ -103,10 +110,67 @@ class DesnudadorWindow(QWidget):
         self.progress_bar.setTextVisible(False)
         main_layout.addWidget(self.progress_bar)
         
+        self.files_to_process = []
         self.current_index = 0
         self.total_files = 0
         self.output_directory = ""
+        self.thread = None
         self.update_model_description(0)
+
+    # ... (O resto dos seus métodos permanece o mesmo até o handle_processing_error)
+
+    def handle_processing_error(self, error_message):
+        """ Conjura uma janela de diálogo para revelar a alma do erro, com a opção de salvar o relatório. """
+        logger.error(f"Um erro foi capturado pela GUI: {error_message}")
+        self.label.setText("Ocorreu um erro!")
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(False)
+        self.set_controls_enabled(True)
+        self.files_to_process.clear()
+
+        log_path = get_log_path()
+        error_dialog = create_styled_message_box(
+            self,
+            "Erro no Processamento",
+            "Ocorreu um erro durante a purificação do espírito.",
+            QMessageBox.Icon.Critical,
+            f"Detalhes: {error_message}\n\nUm registro completo da provação foi salvo em:\n{log_path}"
+        )
+        #3
+        # Conjura os botões personalizados
+        save_button = error_dialog.addButton("Salvar Relatório", QMessageBox.ButtonRole.ActionRole)
+        error_dialog.addButton("OK", QMessageBox.ButtonRole.AcceptRole)
+        
+        error_dialog.exec()
+
+        if error_dialog.clickedButton() == save_button:
+            self.save_log_file()
+
+    def save_log_file(self):
+        log_path = get_log_path()
+        if not os.path.exists(log_path):
+            logger.error("Arquivo de log não encontrado para salvamento.")
+            return
+
+        save_path, _ = QFileDialog.getSaveFileName(self, "Salvar Relatório de Erro", os.path.expanduser("~/fogstripper_error_report.log"), "Log Files (*.log)")
+        if save_path:
+            try:
+                shutil.copy(log_path, save_path)
+                logger.info(f"Relatório de erro salvo em: {save_path}")
+            except Exception as e:
+                logger.error(f"Falha ao salvar o relatório de erro: {e}")
+    
+    # Adicionando os outros métodos para completude, sem alterações
+    def set_controls_enabled(self, enabled):
+        self.button.setEnabled(enabled)
+        self.model_combo.setEnabled(enabled)
+        self.format_combo.setEnabled(enabled)
+        self.slider.setEnabled(enabled)
+        self.tile_slider.setEnabled(enabled)
+        self.setAcceptDrops(enabled)
+        is_animated = any(p.lower().endswith(('.gif', '.webm')) for p in self.files_to_process)
+        if not is_animated:
+            self.upscale_checkbox.setEnabled(enabled)
 
     def update_model_description(self, index):
         model_name = self.model_combo.currentText()
@@ -116,35 +180,44 @@ class DesnudadorWindow(QWidget):
         if event.mimeData().hasUrls(): event.acceptProposedAction()
 
     def dropEvent(self, event: QDropEvent):
-        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif'))]
-        if paths: self.process_images(paths)
+        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.webm'))]
+        if paths: self.start_file_processing(paths)
 
     def open_files(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", "Imagens (*.png *.jpg *.jpeg *.webp *.gif)")
-        if paths: self.process_images(paths)
+        paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", "Imagens (*.png *.jpg *.jpeg *.webp *.gif *.webm)")
+        if paths: self.start_file_processing(paths)
 
-    def process_images(self, paths):
+    def start_file_processing(self, paths):
         if not paths: return
         
-        msg_box = create_styled_message_box(self, 'Confirmar Processamento', 
-                                            f"Você está prestes a processar {len(paths)} imagem(ns).\n\nDeseja continuar?")
+        is_animated = any(p.lower().endswith(('.gif', '.webm')) for p in paths)
+        if is_animated:
+            self.upscale_checkbox.setChecked(False)
+            self.upscale_checkbox.setEnabled(False)
+            self.upscale_checkbox.setToolTip("Upscale não está disponível para GIFs/WEBMs.")
+        else:
+            self.upscale_checkbox.setEnabled(True)
+            self.upscale_checkbox.setToolTip("")
+        
+        msg_box = create_styled_message_box(self, 'Confirmar Processamento', f"Você está prestes a processar {len(paths)} imagem(ns).\n\nDeseja continuar?")
         msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         msg_box.setDefaultButton(QMessageBox.StandardButton.No)
         
-        if msg_box.exec() == QMessageBox.StandardButton.No:
-            return
+        if msg_box.exec() == QMessageBox.StandardButton.No: return
 
+        self.files_to_process = paths
         self.output_directory = os.path.dirname(paths[0])
         self.total_files = len(paths)
         self.current_index = 0
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
+        self.set_controls_enabled(False)
         logger.info(f"Iniciando processamento de {self.total_files} arquivos.")
-        self.process_next_image(paths)
+        self.process_next_image()
 
-    def process_next_image(self, paths):
+    def process_next_image(self):
         if self.current_index < self.total_files:
-            path = paths[self.current_index]
+            path = self.files_to_process[self.current_index]
             logger.info(f"Processando arquivo: {path}")
             self.label.setText(f"Processando: {os.path.basename(path)} ({self.current_index + 1}/{self.total_files})")
             
@@ -152,41 +225,29 @@ class DesnudadorWindow(QWidget):
                 input_path=path,
                 apply_upscale=self.upscale_checkbox.isChecked(),
                 model_name=self.model_combo.currentText(),
-                output_format=self.format_combo.currentText(),
+                output_format=self.format_combo.currentText().lower(),
                 potencia=self.slider.value(),
                 tile_size=self.tile_slider.value()
             )
-            self.thread.progress.connect(self.update_progress)
-            self.thread.finished.connect(lambda p: self.finish_image(p, paths))
+            self.thread.progress.connect(self.progress_bar.setValue)
+            self.thread.finished.connect(self.finish_image)
+            self.thread.error.connect(self.handle_processing_error)
             self.thread.start()
         else:
             logger.info("Processamento em lote concluído.")
             self.label.setText("Arraste e solte as imagens aqui")
             self.progress_bar.setVisible(False)
+            self.set_controls_enabled(True)
 
-            msg_box = create_styled_message_box(self, "Processo Concluído", 
-                                                "Todas as imagens foram processadas com sucesso!")
+            msg_box = create_styled_message_box(self, "Processo Concluído", "Todas as imagens foram processadas com sucesso!")
             open_folder_button = msg_box.addButton("Abrir Pasta", QMessageBox.ButtonRole.ActionRole)
-            process_more_button = msg_box.addButton("Processar Mais", QMessageBox.ButtonRole.ActionRole)
             msg_box.addButton("OK", QMessageBox.ButtonRole.AcceptRole)
             
             msg_box.exec()
 
             if msg_box.clickedButton() == open_folder_button:
                 QDesktopServices.openUrl(QUrl.fromLocalFile(self.output_directory))
-            elif msg_box.clickedButton() == process_more_button:
-                self.open_files()
 
-    def update_progress(self, value):
-        self.progress_bar.setValue(value)
-
-    def finish_image(self, output_path, paths):
-        if not output_path:
-            logger.error("Ocorreu um erro e o caminho de saída não foi gerado.")
-            error_box = create_styled_message_box(self, "Erro", 
-                                                  "Ocorreu um erro durante o processamento.\nVerifique o arquivo de log para detalhes.",
-                                                  icon=QMessageBox.Icon.Critical)
-            error_box.exec()
-        
+    def finish_image(self, output_path):
         self.current_index += 1
-        self.process_next_image(paths)
+        self.process_next_image()

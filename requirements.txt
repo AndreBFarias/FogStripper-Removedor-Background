@@ -1,4 +1,5 @@
+#1
 PyQt6
-rembg[gpu]
-Pillow
 qdarkstyle
+Pillow
+imageio[ffmpeg]

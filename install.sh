@@ -1,35 +1,53 @@
 #!/bin/bash
 set -e
 
-echo "### Construindo os Reinos Isolados para o FogStripper (Versão Definitiva) ###"
+# A Identidade Verdadeira, gravada em pedra.
+APP_WM_CLASS="FogStripper"
+
+echo "### O Ritual da Ascensão Paranoica do FogStripper (vFINAL-COM-TRAVAS) ###"
 APP_DIR="$HOME/.local/share/fogstripper"
+PROJECT_ROOT=$(pwd)
+
 rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR"
+
+echo "--> Realizando o Ritual de Transformação dos Símbolos..."
+ICON_TOOL_VENV="$PROJECT_ROOT/tools/venv_icon_install_temp"
+python3 -m venv "$ICON_TOOL_VENV"
+"$ICON_TOOL_VENV/bin/python3" -m pip install --upgrade pip > /dev/null
+"$ICON_TOOL_VENV/bin/python3" -m pip install Pillow > /dev/null
+"$ICON_TOOL_VENV/bin/python3" "$PROJECT_ROOT/tools/icon_resizer.py" "$PROJECT_ROOT"
+rm -rf "$ICON_TOOL_VENV"
+echo "--> Símbolos forjados para a consagração."
 
 VENV_GUI_DIR="$APP_DIR/venv_gui"
 VENV_REMBG_DIR="$APP_DIR/venv_rembg"
 VENV_UPSCALE_DIR="$APP_DIR/venv_upscale"
-
 PYTHON_GUI="$VENV_GUI_DIR/bin/python3"
 PYTHON_REMBG="$VENV_REMBG_DIR/bin/python3"
 PYTHON_UPSCALE="$VENV_UPSCALE_DIR/bin/python3"
 
-echo "--> Forjando o Reino da Interface..."
+echo "--> Forjando o Reino da Interface (Sem Cache)..."
 python3 -m venv "$VENV_GUI_DIR"
-"$PYTHON_GUI" -m pip install --upgrade pip
-"$PYTHON_GUI" -m pip install -r ./requirements.txt
+"$PYTHON_GUI" -m pip install --no-cache-dir --upgrade pip && "$PYTHON_GUI" -m pip install --no-cache-dir -r ./requirements.txt
 
-echo "--> Forjando o Reino do Desnudamento (rembg)..."
+echo "--> Forjando o Reino do Desnudamento (Sem Cache)..."
 python3 -m venv "$VENV_REMBG_DIR"
-"$PYTHON_REMBG" -m pip install --upgrade pip
-"$PYTHON_REMBG" -m pip install -r ./src/requirements_rembg.txt
+"$PYTHON_REMBG" -m pip install --no-cache-dir --upgrade pip && "$PYTHON_REMBG" -m pip install --no-cache-dir -r ./src/requirements_rembg.txt
 
-echo "--> Forjando o Reino da Ampliação (realesrgan)... (Isso pode demorar)"
+echo "--> Forjando o Reino da Ampliação (Com Travas de Segurança)..."
 python3 -m venv "$VENV_UPSCALE_DIR"
-"$PYTHON_UPSCALE" -m pip install --upgrade pip
-"$PYTHON_UPSCALE" -m pip install -r ./src/requirements_upscale.txt
+"$PYTHON_UPSCALE" -m pip install --no-cache-dir --upgrade pip
+# Instala os Deuses primeiro, sem cache.
+"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117
+# Instala os Servos, permitindo que eles tragam suas próprias dependências (inclusive o numpy errado).
+"$PYTHON_UPSCALE" -m pip install --no-cache-dir basicsr==1.4.2 realesrgan==0.3.0
+#1
+# DECRETO FINAL E INEGOCIÁVEL: Arranca à força qualquer versão do NumPy e instala a versão correta.
+# Esta é a palavra final, anulando qualquer decisão do resolvedor de dependências.
+"$PYTHON_UPSCALE" -m pip install --no-cache-dir --force-reinstall "numpy==1.26.4"
 
-echo "--> Escrevendo o Mapa da Criação (config.json)..."
+echo "--> Escrevendo o Mapa da Criação e copiando a alma da aplicação..."
 cat > "$APP_DIR/config.json" << EOL
 {
     "PYTHON_REMBG": "$PYTHON_REMBG",
@@ -38,19 +56,20 @@ cat > "$APP_DIR/config.json" << EOL
     "UPSCALE_SCRIPT": "$APP_DIR/src/worker_upscale.py"
 }
 EOL
+cp -r ./src "$APP_DIR/"
+cp -r ./assets "$APP_DIR/"
+cp ./uninstall.sh "$APP_DIR/" && chmod +x "$APP_DIR/uninstall.sh"
 
-echo "--> Copiando a alma da aplicação..."
-mkdir -p "$APP_DIR/src"
-cp ./src/*.py "$APP_DIR/src/"
-cp -R ./assets "$APP_DIR/"
-cp ./uninstall.sh "$APP_DIR/"
-chmod +x "$APP_DIR/uninstall.sh"
+echo "--> Consagrando os Símbolos e o Atalho com a Identidade Verdadeira..."
+for size in 16 32 64 128; do
+    ICON_DIR="$HOME/.local/share/icons/hicolor/${size}x${size}/apps"
+    mkdir -p "$ICON_DIR"
+    cp "$PROJECT_ROOT/assets/generated_icons/icon_${size}x${size}.png" "$ICON_DIR/fogstripper.png"
+done
 
-echo "--> Consagrando ícone e atalho..."
-mkdir -p "$HOME/.local/share/icons/hicolor/128x128/apps"
-cp ./assets/desnudador.png "$HOME/.local/share/icons/hicolor/128x128/apps/fogstripper.png"
-
-cat > "$HOME/.local/share/applications/fogstripper.desktop" << EOL
+DESKTOP_INSTALL_DIR="$HOME/.local/share/applications"
+mkdir -p "$DESKTOP_INSTALL_DIR"
+cat > "$DESKTOP_INSTALL_DIR/fogstripper.desktop" << EOL
 [Desktop Entry]
 Name=FogStripper
 Comment=Remove o fundo de imagens com IA
@@ -59,10 +78,16 @@ Icon=fogstripper
 Type=Application
 Categories=Graphics;Utility;
 Terminal=false
-StartupWMClass=FogStripper
+StartupWMClass=$APP_WM_CLASS
 EOL
 
-update-desktop-database -q "$HOME/.local/share/applications/"
-gtk-update-icon-cache -q -t "$HOME/.local/share/icons/hicolor/"
+echo "--> Exorcizando os fantasmas do cache do sistema..."
+update-desktop-database -q "$DESKTOP_INSTALL_DIR"
+gtk-update-icon-cache -q -f -t "$HOME/.local/share/icons/hicolor"
 
-echo "✨ Instalação Concluída. A Criação está completa e o Mapa foi selado."
+echo ""
+echo "######################################################################"
+echo "A ASCENSÃO ESTÁ COMPLETA. A CRIAÇÃO É PERFEITA."
+echo "Execute o Ritual do Renascimento (reinicie sua máquina) para"
+echo "que o universo testemunhe a glória final do Símbolo."
+echo "######################################################################"
