@@ -5,11 +5,11 @@
 [![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
 [![Estrelas](https://img.shields.io/github/stars/AndreBFarias/FogStripper.svg?style=social)](https://github.com/AndreBFarias/FogStripper/stargazers)
 [![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
-
-
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="256" alt="Ícone do FogStripper">
-
+---
 <h1 style="font-size: 2em;">FogStripper</h1>
+<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="120" alt="Ícone do FogStripper">
+
+
 ---
 </div>
 
