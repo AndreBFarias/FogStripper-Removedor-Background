@@ -23,6 +23,7 @@ venv/
 # Python cache
 __pycache__/
 *.pyc
+venv_icon_dev/
 
 # C extensions
 *.so
