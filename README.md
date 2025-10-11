@@ -7,7 +7,7 @@
 [![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
 
 <h1 style="font-size: 2em;">FogStripper</h1>
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="80" alt="Ícone do FogStripper">
+<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="256" alt="Ícone do FogStripper">
 
 
 </div>
