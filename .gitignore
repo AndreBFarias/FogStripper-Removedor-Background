@@ -14,6 +14,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+venv_icon_dev/
+lib/
+
 
 # --- Arquivos Gerados pelo Projeto ---
 # Ignora arquivos criados dinamicamente pelos scripts do projeto.
