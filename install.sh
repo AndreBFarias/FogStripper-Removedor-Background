@@ -27,24 +27,33 @@ PYTHON_GUI="$VENV_GUI_DIR/bin/python3"
 PYTHON_REMBG="$VENV_REMBG_DIR/bin/python3"
 PYTHON_UPSCALE="$VENV_UPSCALE_DIR/bin/python3"
 
+# Adiciona a lógica de detecção de hardware
+if command -v nvidia-smi &> /dev/null; then
+    echo "--> Detectada GPU NVIDIA. Forjando Reinos com poder da CUDA..."
+    REMBG_REQS="./src/requirements_rembg.txt"
+    TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117'
+else
+    echo "--> Nenhuma GPU NVIDIA detectada. Forjando Reinos com poder da CPU..."
+    REMBG_REQS="./src/requirements_rembg_cpu.txt"
+    TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu'
+fi
+
 echo "--> Forjando o Reino da Interface (Sem Cache)..."
 python3 -m venv "$VENV_GUI_DIR"
 "$PYTHON_GUI" -m pip install --no-cache-dir --upgrade pip && "$PYTHON_GUI" -m pip install --no-cache-dir -r ./requirements.txt
 
 echo "--> Forjando o Reino do Desnudamento (Sem Cache)..."
 python3 -m venv "$VENV_REMBG_DIR"
-"$PYTHON_REMBG" -m pip install --no-cache-dir --upgrade pip && "$PYTHON_REMBG" -m pip install --no-cache-dir -r ./src/requirements_rembg.txt
+"$PYTHON_REMBG" -m pip install --no-cache-dir --upgrade pip && "$PYTHON_REMBG" -m pip install --no-cache-dir -r "$REMBG_REQS"
 
 echo "--> Forjando o Reino da Ampliação (Com Travas de Segurança)..."
 python3 -m venv "$VENV_UPSCALE_DIR"
 "$PYTHON_UPSCALE" -m pip install --no-cache-dir --upgrade pip
-# Instala os Deuses primeiro, sem cache.
-"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117
-# Instala os Servos, permitindo que eles tragam suas próprias dependências (inclusive o numpy errado).
+# Instala os Deuses (agora condicionalmente)
+eval "$TORCH_CMD"
+# Instala os Servos
 "$PYTHON_UPSCALE" -m pip install --no-cache-dir basicsr==1.4.2 realesrgan==0.3.0
-#1
-# DECRETO FINAL E INEGOCIÁVEL: Arranca à força qualquer versão do NumPy e instala a versão correta.
-# Esta é a palavra final, anulando qualquer decisão do resolvedor de dependências.
+# DECRETO FINAL E INEGOCIÁVEL: Força a versão correta do NumPy.
 "$PYTHON_UPSCALE" -m pip install --no-cache-dir --force-reinstall "numpy==1.26.4"
 
 echo "--> Escrevendo o Mapa da Criação e copiando a alma da aplicação..."
@@ -53,7 +62,9 @@ cat > "$APP_DIR/config.json" << EOL
     "PYTHON_REMBG": "$PYTHON_REMBG",
     "PYTHON_UPSCALE": "$PYTHON_UPSCALE",
     "REMBG_SCRIPT": "$APP_DIR/src/worker_rembg.py",
-    "UPSCALE_SCRIPT": "$APP_DIR/src/worker_upscale.py"
+    "UPSCALE_SCRIPT": "$APP_DIR/src/worker_upscale.py",
+    "EFFECTS_SCRIPT": "$APP_DIR/src/worker_effects.py",
+    "BACKGROUND_SCRIPT": "$APP_DIR/src/worker_background.py"
 }
 EOL
 cp -r ./src "$APP_DIR/"
@@ -91,3 +102,4 @@ echo "A ASCENSÃO ESTÁ COMPLETA. A CRIAÇÃO É PERFEITA."
 echo "Execute o Ritual do Renascimento (reinicie sua máquina) para"
 echo "que o universo testemunhe a glória final do Símbolo."
 echo "######################################################################"
+

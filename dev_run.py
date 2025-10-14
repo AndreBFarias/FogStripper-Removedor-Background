@@ -15,6 +15,18 @@ def run_pip_install(python_executable, packages):
     print(f"--> Executando: {' '.join(command)}")
     subprocess.run(command, check=True)
 
+# Lógica de detecção de hardware adaptada para Python
+try:
+    subprocess.run(["nvidia-smi"], capture_output=True, check=True)
+    print("--> Detectada GPU NVIDIA. O Ateliê usará o poder da CUDA.")
+    REMBG_REQS = "src/requirements_rembg.txt"
+    # O Pytorch 1.13.1 com CUDA 11.7 é uma combinação estável conhecida
+    TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cu117"]
+except (subprocess.CalledProcessError, FileNotFoundError):
+    print("--> Nenhuma GPU NVIDIA detectada. O Ateliê usará o poder da CPU.")
+    REMBG_REQS = "src/requirements_rembg_cpu.txt"
+    TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cpu"]
+
 if not os.path.exists(VENV_DIR):
     print(f"--> Criando ambiente de desenvolvimento isolado em: {VENV_DIR}")
     venv.create(VENV_DIR, with_pip=True)
@@ -37,30 +49,35 @@ except (subprocess.CalledProcessError, FileNotFoundError):
     run_pip_install(python_executable, ["-r", "requirements.txt"])
     
     print("\n--> Forjando dependências do Desnudamento...")
-    run_pip_install(python_executable, ["-r", "src/requirements_rembg.txt"])
+    run_pip_install(python_executable, ["-r", REMBG_REQS])
     
     print("\n--> Forjando fundações da Ampliação (Deuses)...")
-    run_pip_install(python_executable, ["torch", "torchvision", "--index-url", "https://download.pytorch.org/whl/cu121"])
+    run_pip_install(python_executable, TORCH_PACKAGES)
     
     print("\n--> Forjando ferramentas da Ampliação (Servos em sua forma imutável)...")
     # Decreta as versões exatas para garantir a paz eterna
     run_pip_install(python_executable, ["basicsr==1.4.2", "realesrgan==0.3.0"])
     
+    # Decreto final para garantir a versão correta do NumPy
+    run_pip_install(python_executable, ["--force-reinstall", "numpy==1.26.4"])
+    
     print("--> Forja de dependências concluída.")
 
-print("\n--- Ritual dos Símbolos (Modo de Teste) ---")
+print("\n--- Gerando Símbolos (Modo de Teste) ---")
 icon_resizer_script = os.path.join(PROJECT_ROOT, "tools", "icon_resizer.py")
 if os.path.exists(icon_resizer_script):
     subprocess.run([python_executable, icon_resizer_script, PROJECT_ROOT], check=True, capture_output=True)
     print("--> Ícones gerados para teste em 'assets/generated_icons/'.")
-print("--- Fim do Ritual dos Símbolos ---\n")
+print("--- Fim da Geração de Símbolos ---\n")
 
 config_path = os.path.join(PROJECT_ROOT, "config.dev.json")
 dev_config = {
     "PYTHON_REMBG": python_executable,
     "PYTHON_UPSCALE": python_executable,
     "REMBG_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_rembg.py"),
-    "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_upscale.py")
+    "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_upscale.py"),
+    "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_effects.py"),
+    "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_background.py")
 }
 print(f"--> Forjando o Mapa de Desenvolvimento temporário em: {config_path}")
 with open(config_path, 'w') as f:
@@ -82,3 +99,5 @@ finally:
         os.remove(config_path)
 
 print("### Sessão de Desenvolvimento Concluída ###")
+
+

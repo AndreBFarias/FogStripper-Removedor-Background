@@ -17,14 +17,14 @@ class ProcessThread(QThread):
     finished = pyqtSignal(str)
     error = pyqtSignal(str)
 
-    def __init__(self, input_path, apply_upscale, model_name, output_format, potencia, tile_size):
+    def __init__(self, input_path, model_name, output_format, potencia, tile_size, post_processing_opts):
         super().__init__()
         self.input_path = input_path
-        self.apply_upscale = apply_upscale
         self.model_name = model_name
         self.output_format = output_format if output_format.startswith('.') else f".{output_format}"
         self.potencia = potencia
         self.tile_size = tile_size
+        self.post_processing_opts = post_processing_opts
         self.temp_dir = tempfile.mkdtemp(prefix="fogstripper_")
         self.is_animated = self.input_path.lower().endswith(('.gif', '.webm'))
 
@@ -36,8 +36,6 @@ class ProcessThread(QThread):
             if result.stderr: logger.warning(f"Avisos do worker: {result.stderr.strip()}")
             return True
         except subprocess.CalledProcessError as e:
-            #2
-            # Registro Forense Aprimorado: Registra separadamente tudo que o servo disse e gritou.
             logger.error(f"Worker falhou com código de saída {e.returncode}.")
             if e.stdout:
                 logger.error(f"--- Saída Padrão (stdout) do Worker ---:\n{e.stdout.strip()}")
@@ -93,36 +91,65 @@ class ProcessThread(QThread):
             self.cleanup()
     
     def process_static_image(self, current_path, final_output_path):
-        is_svg_illusion = self.output_format == '.svg'
-        worker_output_format = '.png' if is_svg_illusion else self.output_format
-        rembg_output = os.path.join(self.temp_dir, f"processed{worker_output_format}")
+        step_input_path = current_path
         
-        self.progress.emit(25)
+        self.progress.emit(10)
+        rembg_output = os.path.join(self.temp_dir, "1_rembg_processed.png")
         rembg_cmd = [
             PATHS.get("PYTHON_REMBG"), PATHS.get("REMBG_SCRIPT"),
-            "--input", current_path, "--output", rembg_output,
+            "--input", step_input_path, "--output", rembg_output,
             "--model", self.model_name, "--potencia", str(self.potencia)
         ]
         if not self.run_command(rembg_cmd):
             raise RuntimeError("Falha no Reino do Desnudamento.")
-        self.progress.emit(50)
+        step_input_path = rembg_output
+        self.progress.emit(30)
 
-        if self.apply_upscale:
-            upscale_output_format = '.png' if is_svg_illusion else self.output_format
-            upscale_output = os.path.join(self.temp_dir, f"upscaled{upscale_output_format}")
+        upscale_factor = self.post_processing_opts.get("upscale_factor", 0)
+        if upscale_factor > 0:
+            upscale_output = os.path.join(self.temp_dir, "2_upscaled.png")
             upscale_cmd = [
                 PATHS.get("PYTHON_UPSCALE"), PATHS.get("UPSCALE_SCRIPT"),
-                "--input", rembg_output, "--output", upscale_output,
-                "--tile", str(self.tile_size)
+                "--input", step_input_path, "--output", upscale_output,
+                "--tile", str(self.tile_size), "--outscale", str(upscale_factor)
             ]
             if not self.run_command(upscale_cmd):
                 raise RuntimeError("Falha no Reino da Ampliação.")
-            final_temp_path = upscale_output
-            self.progress.emit(90)
-        else:
-            final_temp_path = rembg_output
+            step_input_path = upscale_output
+        self.progress.emit(50)
 
-        shutil.move(final_temp_path, final_output_path)
+        if self.post_processing_opts.get("enabled"):
+            if self.post_processing_opts.get("shadow_enabled"):
+                shadow_output = os.path.join(self.temp_dir, "3_shadow_effect.png")
+                effects_cmd = [
+                    PATHS.get("PYTHON_REMBG"), PATHS.get("EFFECTS_SCRIPT"),
+                    "--input", step_input_path,
+                    "--output", shadow_output
+                ]
+                if not self.run_command(effects_cmd):
+                    raise RuntimeError("Falha no Altar das Sombras.")
+                step_input_path = shadow_output
+            self.progress.emit(70)
+
+            bg_type = self.post_processing_opts.get("background_type")
+            bg_data = self.post_processing_opts.get("background_data")
+            if bg_type and bg_data:
+                background_output = os.path.join(self.temp_dir, f"4_background{self.output_format}")
+                background_cmd = [
+                    PATHS.get("PYTHON_REMBG"), PATHS.get("BACKGROUND_SCRIPT"),
+                    "--input", step_input_path,
+                    "--output", background_output,
+                    "--bg-type", bg_type,
+                    "--bg-data", bg_data,
+                    "--resize-mode", self.post_processing_opts.get("background_resize_mode")
+                ]
+                if not self.run_command(background_cmd):
+                    raise RuntimeError("Falha no Altar dos Fundos.")
+                step_input_path = background_output
+            self.progress.emit(90)
+        
+        shutil.move(step_input_path, final_output_path)
+        self.progress.emit(100)
         return final_output_path
 
     def process_animation(self, current_path, final_output_path):
@@ -130,7 +157,11 @@ class ProcessThread(QThread):
         
         reader = imageio.get_reader(current_path)
         try:
-            fps = reader.get_meta_data().get('fps', 30)
+            meta_data = reader.get_meta_data()
+            fps = meta_data.get('fps', None)
+            if fps is None:
+                duration = meta_data.get('duration', 100) / 1000
+                fps = 1 / duration if duration > 0 else 10
             frames = [frame for frame in reader]
         finally:
             reader.close()
@@ -181,7 +212,8 @@ class ProcessThread(QThread):
             if final_output_path.lower().endswith('.webm'):
                 imageio.mimsave(final_output_path, np_frames, fps=fps, codec='libvpx-vp9', pixelformat='yuva420p', quality=8)
             else: # GIF
-                imageio.mimsave(final_output_path, np_frames, fps=fps, disposal=2)
+                imageio.mimsave(final_output_path, np_frames, fps=fps, loop=0, disposal=2)
 
             self.progress.emit(100)
             return final_output_path
+
