@@ -18,14 +18,31 @@ Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove 
 
 ### Funcionalidades
 
-- **Remoção de Fundo com IA:** Múltiplos modelos (`rembg`) para diferentes tipos de imagem.
-- **Upscaling 4x Opcional:** Melhore a resolução e a qualidade da imagem final com `Real-ESRGAN`.
-- **Suporte a Animações:** Processe GIFs e WEBMs, extraindo e tratando cada quadro individualmente.
-- **Controle Fino de Recursos:**
-    - **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
-    - **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
-- **Interface Intuitiva:** Arraste e solte, com feedback claro e diálogos informativos de erro.
-- **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem nunca entrarem em conflito.
+-   **Arsenal de IAs para Remoção de Fundo:** Escolha entre múltiplos modelos de `rembg` para cada tipo de tarefa, do mais rápido ao mais preciso:
+    -   `u2net` / `u2netp`: Equilíbrio ideal para uso geral e performance.
+    -   `u2net_human_seg`: Especializado em recorte de alta precisão de figuras humanas.
+    -   `isnet-general-use`: Modelo moderno para a melhor acurácia em objetos complexos.
+
+-   **Upscaling de Alta Fidelidade (Real-ESRGAN):** Amplie a resolução das suas imagens, com opções de escala em **2x, 3x e 4x**, ou desative para máxima velocidade.
+
+-   **Módulo de Pós-Processamento Integrado:** Dê o acabamento final diretamente na aplicação com um conjunto de ferramentas criativas:
+    -   **Composição de Fundo:** Substitua a transparência por uma **cor sólida** ou uma **imagem personalizada**.
+    -   **Projeção de Sombra:** Adicione um efeito de **sombra projetada** sutil, com controle de desfoque e opacidade para um resultado mais natural.
+
+-   **Suporte Avançado a Animações:** Processe `GIFs` e `WEBMs` com a mesma precisão. O FogStripper trata cada quadro individualmente e oferece duas saídas:
+    -   Recompila a animação com o fundo removido.
+    -   Extrai todos os quadros processados como uma sequência de imagens estáticas (`.png`, `.svg`, etc.).
+
+-   **Controle Fino de Recursos:**
+    -   **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
+    -   **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
+
+-   **Exportação Flexível:** Salve seus resultados nos formatos `PNG`, `WEBP`, `SVG` ou `GIF`.
+
+-   **Interface Intuitiva:** Arraste e solte seus arquivos, com feedback claro durante o processo e diálogos informativos de erro.
+
+-   **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem que as complexas dependências de IA entrem em conflito.
+
 
 ### A Arquitetura
 
