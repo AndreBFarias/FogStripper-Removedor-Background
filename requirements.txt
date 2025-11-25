@@ -1,5 +1,6 @@
-#1
 PyQt6
 qdarkstyle
 Pillow
 imageio[ffmpeg]
+opencv-python-headless
+numpy

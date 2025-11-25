@@ -1,1 +1,4 @@
 rembg
+Pillow
+imageio[ffmpeg]
+numpy<2.0

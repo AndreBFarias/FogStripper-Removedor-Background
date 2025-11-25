@@ -52,9 +52,9 @@ python3 -m venv "$VENV_UPSCALE_DIR"
 # Instala os Deuses (agora condicionalmente)
 eval "$TORCH_CMD"
 # Instala os Servos
-"$PYTHON_UPSCALE" -m pip install --no-cache-dir basicsr==1.4.2 realesrgan==0.3.0
-# DECRETO FINAL E INEGOCIÁVEL: Força a versão correta do NumPy.
-"$PYTHON_UPSCALE" -m pip install --no-cache-dir --force-reinstall "numpy==1.26.4"
+# Instala os Servos
+"$PYTHON_UPSCALE" -m pip install --no-cache-dir -r ./src/requirements_upscale.txt
+
 
 echo "--> Escrevendo o Mapa da Criação e copiando a alma da aplicação..."
 cat > "$APP_DIR/config.json" << EOL

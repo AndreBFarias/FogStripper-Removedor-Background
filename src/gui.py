@@ -4,7 +4,7 @@ import shutil
 from PyQt6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout, QFileDialog, 
                              QMessageBox, QProgressBar, QSlider, QFrame, 
                              QGridLayout, QComboBox, QCheckBox, QTabWidget,
-                             QRadioButton, QHBoxLayout, QGroupBox)
+                             QRadioButton, QHBoxLayout, QGroupBox, QDialog, QButtonGroup)
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QPixmap, QColor
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QDesktopServices
@@ -28,8 +28,63 @@ def create_styled_message_box(parent, title, text, icon=QMessageBox.Icon.NoIcon,
     if informative_text:
         msg_box.setInformativeText(informative_text)
     msg_box.setIcon(icon)
-    msg_box.setStyleSheet("QLabel{ min-width: 450px; font-size: 13pt; } QPushButton{ font-size: 13pt; padding: 5px; }")
+    msg_box.setStyleSheet("QLabel{ min-width: 600px; font-size: 13pt; } QPushButton{ font-size: 13pt; padding: 5px; }")
     return msg_box
+
+class ProcessingOptionsDialog(QDialog):
+    def __init__(self, parent=None, num_files=1):
+        super().__init__(parent)
+        self.setWindowTitle("Opções de Processamento")
+        self.setFixedSize(500, 300)
+        
+        layout = QVBoxLayout(self)
+        
+        # Title
+        title = QLabel(f"Deseja processar {num_files} imagem(ns)?")
+        title.setStyleSheet("font-size: 14pt; font-weight: bold; margin-bottom: 10px;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Options Group
+        group = QGroupBox("Modo de Recorte")
+        group_layout = QVBoxLayout(group)
+        
+        self.rb_original = QRadioButton("Manter dimensões originais")
+        self.rb_original.setChecked(True)
+        self.rb_original.setToolTip("Mantém o tamanho original da imagem (ex: 1920x1080), apenas removendo o fundo.")
+        
+        self.rb_trim = QRadioButton("Ajustar e recortar (Trim)")
+        self.rb_trim.setToolTip("Recorta a imagem para conter apenas o objeto, removendo o espaço vazio transparente.")
+        
+        group_layout.addWidget(self.rb_original)
+        group_layout.addWidget(self.rb_trim)
+        layout.addWidget(group)
+        
+        # Fill Holes Option
+        self.cb_fill_holes = QCheckBox("Agir sobre objetos internos?")
+        self.cb_fill_holes.setToolTip("Marcado: Preenche buracos internos.\nDesmarcado: Remove ruídos externos (mantém apenas o maior objeto).")
+        layout.addWidget(self.cb_fill_holes)
+        
+        layout.addStretch()
+        
+        # Buttons
+        btn_layout = QHBoxLayout()
+        self.btn_process = QPushButton("Processar")
+        self.btn_process.clicked.connect(self.accept)
+        self.btn_process.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 8px;")
+        
+        self.btn_cancel = QPushButton("Cancelar")
+        self.btn_cancel.clicked.connect(self.reject)
+        
+        btn_layout.addWidget(self.btn_cancel)
+        btn_layout.addWidget(self.btn_process)
+        layout.addLayout(btn_layout)
+        
+    def get_crop_option(self):
+        return 'trim' if self.rb_trim.isChecked() else 'original'
+        
+    def get_fill_holes_option(self):
+        return self.cb_fill_holes.isChecked()
 
 class DesnudadorWindow(QWidget):
     def __init__(self):
@@ -48,6 +103,7 @@ class DesnudadorWindow(QWidget):
         self.shadow_enabled = False
         self.shadow_blur = 15
         self.shadow_opacity = 70
+        self.crop_option = 'original'
 
         self.files_to_process = []
         self.current_index = 0
@@ -237,9 +293,21 @@ class DesnudadorWindow(QWidget):
         if is_animated: self.upscale_group.setEnabled(False); self.post_processing_frame.setEnabled(False)
         else: self.upscale_group.setEnabled(True); self.post_processing_frame.setEnabled(True)
         
-        msg_box = create_styled_message_box(self, 'Confirmar Processamento', f"Processar {len(paths)} imagem(ns)?")
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No); msg_box.setDefaultButton(QMessageBox.StandardButton.No)
-        if msg_box.exec() == QMessageBox.StandardButton.No: self.files_to_process.clear(); return
+        if is_animated:
+            # Para animações, usa o diálogo simples padrão
+            msg_box = create_styled_message_box(self, 'Confirmar Processamento', f"Processar {len(paths)} imagem(ns)?")
+            msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No); msg_box.setDefaultButton(QMessageBox.StandardButton.No)
+            if msg_box.exec() == QMessageBox.StandardButton.No: self.files_to_process.clear(); return
+            self.crop_option = 'original' # Animações não suportam crop por enquanto
+            self.fill_holes_option = False
+        else:
+            # Para imagens estáticas, usa o novo diálogo com opções
+            dialog = ProcessingOptionsDialog(self, len(paths))
+            if dialog.exec() == QDialog.DialogCode.Rejected:
+                self.files_to_process.clear()
+                return
+            self.crop_option = dialog.get_crop_option()
+            self.fill_holes_option = dialog.get_fill_holes_option()
 
         self.output_directory = os.path.dirname(paths[0]); self.total_files = len(paths); self.current_index = 0
         self.progress_bar.setValue(0); self.progress_bar.setVisible(True)
@@ -251,7 +319,8 @@ class DesnudadorWindow(QWidget):
             self.label.setText(f"Processando: {os.path.basename(path)} ({self.current_index + 1}/{self.total_files})")
             
             post_opts = {"enabled": self.post_processing_enabled, "upscale_factor": self.upscale_factor, "shadow_enabled": self.shadow_enabled,
-                         "background_type": self.background_type, "background_data": self.background_data, "background_resize_mode": self.background_resize_mode}
+                         "background_type": self.background_type, "background_data": self.background_data, "background_resize_mode": self.background_resize_mode,
+                         "crop_option": self.crop_option, "fill_holes": self.fill_holes_option}
 
             self.thread = ProcessThread(input_path=path, model_name=self.model_combo.currentText(), output_format=self.format_combo.currentText().lower(),
                                         potencia=self.slider.value(), tile_size=self.tile_slider.value(), post_processing_opts=post_opts)
@@ -263,15 +332,48 @@ class DesnudadorWindow(QWidget):
             self.on_all_files_processed()
     
     def finish_image(self, output_path):
+        self.last_output_path = output_path # Store for "Open Image" / "Copy Image"
         self.current_index += 1
         self.process_next_image()
 
     def on_all_files_processed(self):
         self.label.setText("Arraste e solte as imagens aqui"); self.progress_bar.setVisible(False)
         self.set_controls_enabled(True); self.files_to_process.clear()
+        
         msg_box = create_styled_message_box(self, "Processo Concluído", "Todas as imagens foram processadas.")
+        
+        # Add buttons based on context
         open_folder_button = msg_box.addButton("Abrir Pasta", QMessageBox.ButtonRole.ActionRole)
-        msg_box.addButton("OK", QMessageBox.ButtonRole.AcceptRole); msg_box.exec()
-        if msg_box.clickedButton() == open_folder_button: QDesktopServices.openUrl(QUrl.fromLocalFile(self.output_directory))
+        
+        open_image_button = None
+        copy_image_button = None
+        
+        # If only one file was processed, show "Open Image" and "Copy Image"
+        if self.total_files == 1 and hasattr(self, 'last_output_path') and os.path.exists(self.last_output_path):
+            open_image_button = msg_box.addButton("Abrir Imagem", QMessageBox.ButtonRole.ActionRole)
+            copy_image_button = msg_box.addButton("Copiar Imagem", QMessageBox.ButtonRole.ActionRole)
+            
+        msg_box.addButton("OK", QMessageBox.ButtonRole.AcceptRole)
+        msg_box.exec()
+        
+        clicked = msg_box.clickedButton()
+        if clicked == open_folder_button:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(self.output_directory))
+        elif open_image_button and clicked == open_image_button:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(self.last_output_path))
+        elif copy_image_button and clicked == copy_image_button:
+            self.copy_image_to_clipboard(self.last_output_path)
+
+    def copy_image_to_clipboard(self, path):
+        try:
+            image = QImage(path)
+            if not image.isNull():
+                QApplication.clipboard().setImage(image)
+                # Optional: Show a small tooltip or status?
+                # For now, just rely on user checking clipboard.
+            else:
+                QMessageBox.warning(self, "Erro", "Falha ao carregar imagem para cópia.")
+        except Exception as e:
+            QMessageBox.warning(self, "Erro", f"Erro ao copiar imagem: {e}")
 
 

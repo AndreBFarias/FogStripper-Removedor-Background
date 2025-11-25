@@ -46,3 +46,9 @@ dist/
 # Ignora arquivos de metadados comuns do macOS e Windows.
 .DS_Store
 Thumbs.db
+
+# --- Outros ---
+dummy_*.png
+dummy_*.svg
+test_venv/
+test_*.py

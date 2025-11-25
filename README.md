@@ -28,6 +28,9 @@ Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove 
 -   **Módulo de Pós-Processamento Integrado:** Dê o acabamento final diretamente na aplicação com um conjunto de ferramentas criativas:
     -   **Composição de Fundo:** Substitua a transparência por uma **cor sólida** ou uma **imagem personalizada**.
     -   **Projeção de Sombra:** Adicione um efeito de **sombra projetada** sutil, com controle de desfoque e opacidade para um resultado mais natural.
+    -   **Recorte Inteligente (Trim):** Opção para ajustar e recortar a imagem, removendo o excesso de área transparente ao redor do objeto.
+    -   **Preenchimento de Buracos:** Opção para preencher buracos internos no objeto detectado.
+    -   **Limpeza de Ruído:** Lógica avançada para remover artefatos e reflexos indesejados (Morphological Opening).
 
 -   **Suporte Avançado a Animações:** Processe `GIFs` e `WEBMs` com a mesma precisão. O FogStripper trata cada quadro individualmente e oferece duas saídas:
     -   Recompila a animação com o fundo removido.
@@ -37,7 +40,7 @@ Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove 
     -   **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
     -   **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
 
--   **Exportação Flexível:** Salve seus resultados nos formatos `PNG`, `WEBP`, `SVG` ou `GIF`.
+-   **Exportação Flexível:** Salve seus resultados nos formatos `PNG`, `WEBP`, `SVG` (vetor real multicolorido!) ou `GIF`.
 
 -   **Interface Intuitiva:** Arraste e solte seus arquivos, com feedback claro durante o processo e diálogos informativos de erro.
 

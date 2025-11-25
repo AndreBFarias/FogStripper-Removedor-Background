@@ -1,4 +1,5 @@
-rembg[gpu]
+rembg
+onnxruntime-gpu==1.16.3
 Pillow
 imageio[ffmpeg]
 numpy<2.0
