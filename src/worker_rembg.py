@@ -13,7 +13,7 @@ def main():
     try:
         erode_size = 5 + int((args.potencia / 100) * 35)
         bg_threshold = 15 - int((args.potencia / 100) * 20)
-        
+
         session = new_session(args.model)
         with Image.open(args.input) as img:
             output_img = remove(img, 

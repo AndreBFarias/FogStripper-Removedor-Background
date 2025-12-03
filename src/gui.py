@@ -36,53 +36,49 @@ class ProcessingOptionsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Opções de Processamento")
         self.setFixedSize(500, 300)
-        
+
         layout = QVBoxLayout(self)
-        
-        # Title
+
         title = QLabel(f"Deseja processar {num_files} imagem(ns)?")
         title.setStyleSheet("font-size: 14pt; font-weight: bold; margin-bottom: 10px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
-        
-        # Options Group
+
         group = QGroupBox("Modo de Recorte")
         group_layout = QVBoxLayout(group)
-        
+
         self.rb_original = QRadioButton("Manter dimensões originais")
         self.rb_original.setChecked(True)
         self.rb_original.setToolTip("Mantém o tamanho original da imagem (ex: 1920x1080), apenas removendo o fundo.")
-        
+
         self.rb_trim = QRadioButton("Ajustar e recortar (Trim)")
         self.rb_trim.setToolTip("Recorta a imagem para conter apenas o objeto, removendo o espaço vazio transparente.")
-        
+
         group_layout.addWidget(self.rb_original)
         group_layout.addWidget(self.rb_trim)
         layout.addWidget(group)
-        
-        # Fill Holes Option
+
         self.cb_fill_holes = QCheckBox("Agir sobre objetos internos?")
         self.cb_fill_holes.setToolTip("Marcado: Preenche buracos internos.\nDesmarcado: Remove ruídos externos (mantém apenas o maior objeto).")
         layout.addWidget(self.cb_fill_holes)
-        
+
         layout.addStretch()
-        
-        # Buttons
+
         btn_layout = QHBoxLayout()
         self.btn_process = QPushButton("Processar")
         self.btn_process.clicked.connect(self.accept)
         self.btn_process.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; padding: 8px;")
-        
+
         self.btn_cancel = QPushButton("Cancelar")
         self.btn_cancel.clicked.connect(self.reject)
-        
+
         btn_layout.addWidget(self.btn_cancel)
         btn_layout.addWidget(self.btn_process)
         layout.addLayout(btn_layout)
-        
+
     def get_crop_option(self):
         return 'trim' if self.rb_trim.isChecked() else 'original'
-        
+
     def get_fill_holes_option(self):
         return self.cb_fill_holes.isChecked()
 
@@ -93,9 +89,8 @@ class DesnudadorWindow(QWidget):
         self.setWindowTitle("FogStripper")
         self.setAcceptDrops(True)
         self.setFixedSize(800, 850)
-        
-        # --- Estados da Janela ---
-        self.upscale_factor = 4
+
+        self.upscale_factor = 0
         self.post_processing_enabled = False
         self.background_type = 'color'
         self.background_data = '#000000'
@@ -105,40 +100,43 @@ class DesnudadorWindow(QWidget):
         self.shadow_opacity = 70
         self.crop_option = 'original'
 
+        self.video_extensions = ('.mp4', '.mov', '.avi', '.wmv', '.mkv', '.avchd', '.flv', '.webm', '.m4v', '.divx', '.gif')
+        self.image_extensions = ('.png', '.jpg', '.jpeg', '.webp')
+        self.all_extensions = self.image_extensions + self.video_extensions
+
         self.files_to_process = []
         self.current_index = 0
         self.total_files = 0
         self.output_directory = ""
         self.thread = None
 
-        # --- Construção da UI ---
         main_layout = QVBoxLayout(self)
-        
+
         self.icon_label = QLabel()
         logo_path = os.path.join(os.path.dirname(__file__), '..', 'assets', 'icon.png')
         pixmap = QPixmap(logo_path)
         self.icon_label.setPixmap(pixmap.scaled(140, 140, Qt.AspectRatioMode.KeepAspectRatio))
         self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(self.icon_label)
-        
+
         self.label = QLabel("Arraste e solte as imagens aqui")
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(self.label)
-        
+
         self.setup_main_settings(main_layout)
         self.setup_post_processing_ui(main_layout)
 
         main_layout.addStretch()
-        
+
         self.button = QPushButton("Selecione as Imagens")
         self.button.clicked.connect(self.open_files)
         main_layout.addWidget(self.button)
-        
+
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setTextVisible(False)
         main_layout.addWidget(self.progress_bar)
-        
+
         self.update_model_description(0)
 
     def setup_main_settings(self, main_layout):
@@ -164,11 +162,11 @@ class DesnudadorWindow(QWidget):
         settings_layout.addWidget(self.format_combo, 2, 1)
 
         settings_layout.addWidget(QLabel("Potência (Borda):"), 3, 0)
-        self.slider = QSlider(Qt.Orientation.Horizontal); self.slider.setRange(0, 100); self.slider.setValue(75)
+        self.slider = QSlider(Qt.Orientation.Horizontal); self.slider.setRange(0, 100); self.slider.setValue(50)
         settings_layout.addWidget(self.slider, 3, 1)
 
         settings_layout.addWidget(QLabel("Bloco (VRAM):"), 4, 0)
-        self.tile_slider = QSlider(Qt.Orientation.Horizontal); self.tile_slider.setRange(256, 1024); self.tile_slider.setValue(512); self.tile_slider.setSingleStep(64)
+        self.tile_slider = QSlider(Qt.Orientation.Horizontal); self.tile_slider.setRange(256, 1024); self.tile_slider.setValue(640); self.tile_slider.setSingleStep(64)
         self.tile_slider.setToolTip("Blocos menores usam menos VRAM.")
         settings_layout.addWidget(self.tile_slider, 4, 1)
 
@@ -177,12 +175,12 @@ class DesnudadorWindow(QWidget):
     def setup_upscale_options(self, layout):
         self.upscale_group = QGroupBox("Upscale (Melhora na Resolução)")
         upscale_layout = QHBoxLayout(); self.upscale_group.setLayout(upscale_layout)
-        
-        self.rb_upscale_off = QRadioButton("Off"); self.rb_upscale_off.toggled.connect(lambda: self.on_upscale_change(0))
+
+        self.rb_upscale_off = QRadioButton("Off"); self.rb_upscale_off.setChecked(True); self.rb_upscale_off.toggled.connect(lambda: self.on_upscale_change(0))
         self.rb_upscale_2x = QRadioButton("2x"); self.rb_upscale_2x.toggled.connect(lambda: self.on_upscale_change(2))
         self.rb_upscale_3x = QRadioButton("3x"); self.rb_upscale_3x.toggled.connect(lambda: self.on_upscale_change(3))
-        self.rb_upscale_4x = QRadioButton("4x"); self.rb_upscale_4x.setChecked(True); self.rb_upscale_4x.toggled.connect(lambda: self.on_upscale_change(4))
-        
+        self.rb_upscale_4x = QRadioButton("4x"); self.rb_upscale_4x.toggled.connect(lambda: self.on_upscale_change(4))
+
         upscale_layout.addWidget(self.rb_upscale_off); upscale_layout.addWidget(self.rb_upscale_2x)
         upscale_layout.addWidget(self.rb_upscale_3x); upscale_layout.addWidget(self.rb_upscale_4x)
         layout.addWidget(self.upscale_group, 5, 0, 1, 2)
@@ -191,11 +189,11 @@ class DesnudadorWindow(QWidget):
         self.post_processing_frame = QFrame(); self.post_processing_frame.setObjectName("PostProcessingFrame")
         self.post_processing_frame.setStyleSheet("#PostProcessingFrame { border: 1px solid #555; border-radius: 5px; margin-top: 5px; }")
         altar_layout = QVBoxLayout(self.post_processing_frame)
-        
+
         self.post_process_checkbox = QCheckBox("Habilitar Pós-Processamento")
         self.post_process_checkbox.toggled.connect(self.toggle_post_processing)
         altar_layout.addWidget(self.post_process_checkbox)
-        
+
         self.tabs = QTabWidget(); self.tabs.setEnabled(False)
         altar_layout.addWidget(self.tabs)
         self.setup_background_tab(); self.setup_effects_tab()
@@ -261,7 +259,7 @@ class DesnudadorWindow(QWidget):
         save_button = error_dialog.addButton("Salvar Relatório", QMessageBox.ButtonRole.ActionRole)
         error_dialog.addButton("OK", QMessageBox.ButtonRole.AcceptRole); error_dialog.exec()
         if error_dialog.clickedButton() == save_button: self.save_log_file()
-    
+
     def save_log_file(self):
         log_path = get_log_path()
         if not os.path.exists(log_path): return
@@ -273,35 +271,38 @@ class DesnudadorWindow(QWidget):
     def set_controls_enabled(self, enabled):
         for w in [self.button, self.model_combo, self.format_combo, self.slider, self.tile_slider, self.upscale_group, self.post_processing_frame]: w.setEnabled(enabled)
         self.setAcceptDrops(enabled)
-        is_animated = any(p.lower().endswith(('.gif', '.webm')) for p in self.files_to_process)
+        is_animated = any(p.lower().endswith(self.video_extensions) for p in self.files_to_process)
         if is_animated and enabled: self.upscale_group.setEnabled(False); self.post_processing_frame.setEnabled(False)
 
     def update_model_description(self, index): self.model_desc_label.setText(MODEL_DESCRIPTIONS.get(self.model_combo.currentText(), ""))
     def dragEnterEvent(self, event: QDragEnterEvent):
         if event.mimeData().hasUrls(): event.acceptProposedAction()
     def dropEvent(self, event: QDropEvent):
-        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif', '.webm'))]
+        paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().lower().endswith(self.all_extensions)]
         if paths: self.start_file_processing(paths)
     def open_files(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", "Imagens (*.png *.jpg *.jpeg *.webp *.gif *.webm)")
+        video_exts = " ".join([f"*{ext}" for ext in self.video_extensions])
+        image_exts = " ".join([f"*{ext}" for ext in self.image_extensions])
+        filter_str = f"Imagens e Vídeos ({image_exts} {video_exts})"
+        paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", filter_str)
         if paths: self.start_file_processing(paths)
 
     def start_file_processing(self, paths):
         if not paths: return
         self.files_to_process = paths
-        is_animated = any(p.lower().endswith(('.gif', '.webm')) for p in paths)
+        is_animated = any(p.lower().endswith(self.video_extensions) for p in paths)
         if is_animated: self.upscale_group.setEnabled(False); self.post_processing_frame.setEnabled(False)
         else: self.upscale_group.setEnabled(True); self.post_processing_frame.setEnabled(True)
-        
+
         if is_animated:
-            # Para animações, usa o diálogo simples padrão
+
             msg_box = create_styled_message_box(self, 'Confirmar Processamento', f"Processar {len(paths)} imagem(ns)?")
             msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No); msg_box.setDefaultButton(QMessageBox.StandardButton.No)
             if msg_box.exec() == QMessageBox.StandardButton.No: self.files_to_process.clear(); return
-            self.crop_option = 'original' # Animações não suportam crop por enquanto
+            self.crop_option = 'original' 
             self.fill_holes_option = False
         else:
-            # Para imagens estáticas, usa o novo diálogo com opções
+
             dialog = ProcessingOptionsDialog(self, len(paths))
             if dialog.exec() == QDialog.DialogCode.Rejected:
                 self.files_to_process.clear()
@@ -317,7 +318,7 @@ class DesnudadorWindow(QWidget):
         if self.current_index < self.total_files:
             path = self.files_to_process[self.current_index]
             self.label.setText(f"Processando: {os.path.basename(path)} ({self.current_index + 1}/{self.total_files})")
-            
+
             post_opts = {"enabled": self.post_processing_enabled, "upscale_factor": self.upscale_factor, "shadow_enabled": self.shadow_enabled,
                          "background_type": self.background_type, "background_data": self.background_data, "background_resize_mode": self.background_resize_mode,
                          "crop_option": self.crop_option, "fill_holes": self.fill_holes_option}
@@ -330,32 +331,30 @@ class DesnudadorWindow(QWidget):
             self.thread.start()
         else:
             self.on_all_files_processed()
-    
+
     def finish_image(self, output_path):
-        self.last_output_path = output_path # Store for "Open Image" / "Copy Image"
+        self.last_output_path = output_path 
         self.current_index += 1
         self.process_next_image()
 
     def on_all_files_processed(self):
         self.label.setText("Arraste e solte as imagens aqui"); self.progress_bar.setVisible(False)
         self.set_controls_enabled(True); self.files_to_process.clear()
-        
+
         msg_box = create_styled_message_box(self, "Processo Concluído", "Todas as imagens foram processadas.")
-        
-        # Add buttons based on context
+
         open_folder_button = msg_box.addButton("Abrir Pasta", QMessageBox.ButtonRole.ActionRole)
-        
+
         open_image_button = None
         copy_image_button = None
-        
-        # If only one file was processed, show "Open Image" and "Copy Image"
+
         if self.total_files == 1 and hasattr(self, 'last_output_path') and os.path.exists(self.last_output_path):
             open_image_button = msg_box.addButton("Abrir Imagem", QMessageBox.ButtonRole.ActionRole)
             copy_image_button = msg_box.addButton("Copiar Imagem", QMessageBox.ButtonRole.ActionRole)
-            
+
         msg_box.addButton("OK", QMessageBox.ButtonRole.AcceptRole)
         msg_box.exec()
-        
+
         clicked = msg_box.clickedButton()
         if clicked == open_folder_button:
             QDesktopServices.openUrl(QUrl.fromLocalFile(self.output_directory))
@@ -369,11 +368,8 @@ class DesnudadorWindow(QWidget):
             image = QImage(path)
             if not image.isNull():
                 QApplication.clipboard().setImage(image)
-                # Optional: Show a small tooltip or status?
-                # For now, just rely on user checking clipboard.
+
             else:
                 QMessageBox.warning(self, "Erro", "Falha ao carregar imagem para cópia.")
         except Exception as e:
             QMessageBox.warning(self, "Erro", f"Erro ao copiar imagem: {e}")
-
-

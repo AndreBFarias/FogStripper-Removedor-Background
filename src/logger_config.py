@@ -2,7 +2,6 @@ import logging
 import os
 import sys
 
-#2
 LOG_DIR = os.path.expanduser("~/.local/share/fogstripper")
 LOG_FILE = os.path.join(LOG_DIR, 'app.log')
 
@@ -13,7 +12,6 @@ def get_log_path():
 def setup_logging():
     os.makedirs(LOG_DIR, exist_ok=True)
 
-    # Rotação de Log Simples: se o log for > 1MB, arquiva-o.
     if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 1 * 1024 * 1024:
         try:
             os.rename(LOG_FILE, LOG_FILE + ".old")

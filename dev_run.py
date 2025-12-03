@@ -15,12 +15,11 @@ def run_pip_install(python_executable, packages):
     print(f"--> Executando: {' '.join(command)}")
     subprocess.run(command, check=True)
 
-# Lógica de detecção de hardware adaptada para Python
 try:
     subprocess.run(["nvidia-smi"], capture_output=True, check=True)
     print("--> Detectada GPU NVIDIA. O Ateliê usará o poder da CUDA.")
     REMBG_REQS = "src/requirements_rembg.txt"
-    # O Pytorch 1.13.1 com CUDA 11.7 é uma combinação estável conhecida
+
     TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cu117"]
 except (subprocess.CalledProcessError, FileNotFoundError):
     print("--> Nenhuma GPU NVIDIA detectada. O Ateliê usará o poder da CPU.")
@@ -38,29 +37,28 @@ else:
 
 try:
     print("--> Verificando a alma do Ateliê...")
-    # Verifica a existência de um servo-chave do Reino da Ampliação
+
     subprocess.run([python_executable, "-c", "import realesrgan"], check=True, capture_output=True)
     print("--> Alma do Ateliê já está presente e correta.")
 except (subprocess.CalledProcessError, FileNotFoundError):
     print("--> Alma do Ateliê não encontrada ou corrompida. Forjando dependências (isso pode levar vários minutos)...")
     run_pip_install(python_executable, ["--upgrade", "pip"])
-    
+
     print("\n--> Forjando dependências da Interface...")
     run_pip_install(python_executable, ["-r", "requirements.txt"])
-    
+
     print("\n--> Forjando dependências do Desnudamento...")
     run_pip_install(python_executable, ["-r", REMBG_REQS])
-    
+
     print("\n--> Forjando fundações da Ampliação (Deuses)...")
     run_pip_install(python_executable, TORCH_PACKAGES)
-    
+
     print("\n--> Forjando ferramentas da Ampliação (Servos em sua forma imutável)...")
-    # Decreta as versões exatas para garantir a paz eterna
+
     run_pip_install(python_executable, ["basicsr==1.4.2", "realesrgan==0.3.0"])
-    
-    # Decreto final para garantir a versão correta do NumPy
+
     run_pip_install(python_executable, ["--force-reinstall", "numpy==1.26.4"])
-    
+
     print("--> Forja de dependências concluída.")
 
 print("\n--- Gerando Símbolos (Modo de Teste) ---")
@@ -99,5 +97,3 @@ finally:
         os.remove(config_path)
 
 print("### Sessão de Desenvolvimento Concluída ###")
-
-

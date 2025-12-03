@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import sys
 import logging
 import traceback
@@ -10,14 +9,13 @@ setup_logging()
 
 try:
     from PyQt6.QtWidgets import QApplication, QMessageBox, QFileDialog
-    #1
-    # Feitiço de Identidade: Batiza a aplicação com seu nome verdadeiro.
+
     QApplication.setApplicationName("FogStripper")
     from gui import DesnudadorWindow
     import qdarkstyle
 except ImportError as e:
     logging.critical(f"Falha ao importar dependências críticas da GUI: {e}")
-    # Adiciona uma mensagem mais clara para o usuário
+
     print("\n--> ERRO: Dependências da interface não encontradas.")
     print("--> Se este for o primeiro uso do dev_run.py, isso é esperado.")
     print("--> O script tentará instalá-las agora. Por favor, aguarde.")
@@ -38,7 +36,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     msg_box.setWindowTitle("Erro Crítico")
     msg_box.setStandardButtons(QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Close)
     msg_box.setDefaultButton(QMessageBox.StandardButton.Close)
-    
+
     if msg_box.exec() == QMessageBox.StandardButton.Save:
         log_path = get_log_path()
         if os.path.exists(log_path):
