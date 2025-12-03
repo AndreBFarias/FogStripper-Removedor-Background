@@ -1,3 +1,5 @@
+# tools/icon_resizer.py
+
 from PIL import Image
 import os
 import sys
