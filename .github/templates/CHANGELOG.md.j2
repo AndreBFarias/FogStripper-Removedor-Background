@@ -1,0 +1,14 @@
+# Changelog
+
+{% for version, release in context.history.released.items() %}
+## [{{ version.as_tag() }}] - {{ release.tagged_date.strftime("%Y-%m-%d") }}
+
+{% for type, commits in release.elements | groupby("type") %}
+### {{ type | capitalize }}
+
+{% for commit in commits %}
+- {{ commit.descriptions[0] }} ([{{ commit.short_hash }}]({{ commit.hexsha | commit_hash_url }}))
+{% endfor %}
+
+{% endfor %}
+{% endfor %}

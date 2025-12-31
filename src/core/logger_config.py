@@ -2,14 +2,15 @@ import logging
 import os
 import sys
 
-LOG_DIR = os.path.expanduser("~/.local/share/fogstripper")
-LOG_FILE = os.path.join(LOG_DIR, 'app.log')
+LOG_DIR: str = os.path.expanduser("~/.local/share/fogstripper")
+LOG_FILE: str = os.path.join(LOG_DIR, "app.log")
 
-def get_log_path():
-    """Retorna o caminho completo para o arquivo de log."""
+
+def get_log_path() -> str:
     return LOG_FILE
 
-def setup_logging():
+
+def setup_logging() -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
 
     if os.path.exists(LOG_FILE) and os.path.getsize(LOG_FILE) > 1 * 1024 * 1024:
@@ -20,13 +21,10 @@ def setup_logging():
 
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(message)s',
-        handlers=[
-            logging.FileHandler(LOG_FILE),
-            logging.StreamHandler(sys.stdout)
-        ],
-        force=True
+        format="%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(message)s",
+        handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler(sys.stdout)],
+        force=True,
     )
-    logging.info("="*50)
+    logging.info("=" * 50)
     logging.info(f"Sistema de Log inicializado. Log salvo em: {LOG_FILE}")
-    logging.info("="*50)
+    logging.info("=" * 50)

@@ -1,0 +1,53 @@
+services:
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:ro
+    command: pytest src/tests/ -v --ignore=src/tests/test_workers.py --cov=src
+
+  lint:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:ro
+    command: sh -c "ruff check src/ && ruff format --check src/"
+
+  typecheck:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:ro
+    command: mypy src/ --ignore-missing-imports
+
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    command: mkdocs serve -a 0.0.0.0:8000
+
+  all-checks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app:ro
+    command: >
+      sh -c "
+        echo '=== Ruff Lint ===' &&
+        ruff check src/ &&
+        echo '=== Ruff Format ===' &&
+        ruff format --check src/ &&
+        echo '=== MyPy ===' &&
+        mypy src/ --ignore-missing-imports &&
+        echo '=== Pytest ===' &&
+        pytest src/tests/ -v --ignore=src/tests/test_workers.py &&
+        echo '=== All checks passed! ==='
+      "

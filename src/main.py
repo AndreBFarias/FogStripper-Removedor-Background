@@ -3,7 +3,7 @@ import logging
 import traceback
 import shutil
 import os
-from logger_config import setup_logging, get_log_path
+from src.core.logger_config import setup_logging, get_log_path
 
 setup_logging()
 
@@ -11,7 +11,7 @@ try:
     from PyQt6.QtWidgets import QApplication, QMessageBox, QFileDialog
 
     QApplication.setApplicationName("FogStripper")
-    from gui import DesnudadorWindow
+    from src.gui.main_window import FogStripperWindow
     import qdarkstyle
 except ImportError as e:
     logging.critical(f"Falha ao importar dependências críticas da GUI: {e}")
@@ -53,8 +53,30 @@ sys.excepthook = handle_exception
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet())
-    window = DesnudadorWindow()
+    base_style = qdarkstyle.load_stylesheet()
+    combo_fix = """
+        QComboBox QAbstractItemView::item {
+            padding-left: 0px;
+        }
+        QComboBox QAbstractItemView::indicator {
+            width: 0px;
+            height: 0px;
+            margin: 0px;
+            padding: 0px;
+            border: none;
+            background: transparent;
+        }
+        QComboBox QAbstractItemView::indicator:checked,
+        QComboBox QAbstractItemView::indicator:unchecked {
+            width: 0px;
+            height: 0px;
+            image: none;
+            border: none;
+            background: transparent;
+        }
+    """
+    app.setStyleSheet(base_style + combo_fix)
+    window = FogStripperWindow()
     window.show()
     logging.info("Aplicação iniciada com sucesso.")
     sys.exit(app.exec())

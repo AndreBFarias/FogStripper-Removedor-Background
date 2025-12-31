@@ -3,24 +3,28 @@ set -e
 
 APP_WM_CLASS="FogStripper"
 
-echo "### O Ritual da Ascensão Corrigida (vFINAL-AGORA-VAI) ###"
+echo "============================================================"
+echo "  FOGSTRIPPER - INSTALACAO"
+echo "  AVISO: Este processo pode levar 10-15 minutos!"
+echo "============================================================"
+echo ""
 APP_DIR="$HOME/.local/share/fogstripper"
 PROJECT_ROOT=$(pwd)
 
 if [ -d "$APP_DIR" ]; then
-    echo "--> Exorcizando instalação anterior corrompida..."
+    echo "--> Removendo instalacao anterior..."
     rm -rf "$APP_DIR"
 fi
 mkdir -p "$APP_DIR"
 
-echo "--> Realizando o Ritual de Transformação dos Símbolos..."
-ICON_TOOL_VENV="$PROJECT_ROOT/tools/venv_icon_install_temp"
+echo "--> Gerando icones..."
+ICON_TOOL_VENV="$PROJECT_ROOT/.venv_icon_temp"
 python3 -m venv "$ICON_TOOL_VENV"
 "$ICON_TOOL_VENV/bin/python3" -m pip install --upgrade pip > /dev/null
 "$ICON_TOOL_VENV/bin/python3" -m pip install Pillow > /dev/null
-"$ICON_TOOL_VENV/bin/python3" "$PROJECT_ROOT/tools/icon_resizer.py" "$PROJECT_ROOT"
+"$ICON_TOOL_VENV/bin/python3" "$PROJECT_ROOT/src/utils/icon_resizer.py" "$PROJECT_ROOT"
 rm -rf "$ICON_TOOL_VENV"
-echo "--> Símbolos forjados."
+echo "--> Icones gerados."
 
 VENV_GUI_DIR="$APP_DIR/venv_gui"
 VENV_REMBG_DIR="$APP_DIR/venv_rembg"
@@ -30,37 +34,41 @@ PYTHON_REMBG="$VENV_REMBG_DIR/bin/python3"
 PYTHON_UPSCALE="$VENV_UPSCALE_DIR/bin/python3"
 
 if command -v nvidia-smi &> /dev/null; then
-    echo "--> Detectada GPU NVIDIA. Preparando drivers CUDA..."
+    echo "--> GPU NVIDIA detectada. Configurando CUDA..."
     REMBG_REQS="./src/requirements_rembg.txt"
     TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117'
 else
-    echo "--> GPU NVIDIA ausente. Usando CPU..."
+    echo "--> GPU NVIDIA nao encontrada. Usando CPU..."
     REMBG_REQS="./src/requirements_rembg_cpu.txt"
     TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu'
 fi
 
-echo "--> Forjando o Reino da Interface..."
+echo "[1/5] Configurando ambiente da interface (rapido)..."
 python3 -m venv "$VENV_GUI_DIR"
 "$PYTHON_GUI" -m pip install --no-cache-dir --upgrade pip wheel setuptools
 "$PYTHON_GUI" -m pip install --no-cache-dir -r ./requirements.txt
 
-echo "--> Forjando o Reino do Desnudamento..."
+echo ""
+echo "[2/5] Configurando ambiente de remocao de fundo (1-2 min)..."
 python3 -m venv "$VENV_REMBG_DIR"
 "$PYTHON_REMBG" -m pip install --no-cache-dir --upgrade pip wheel setuptools
 "$PYTHON_REMBG" -m pip install --no-cache-dir -r "$REMBG_REQS"
 
-echo "--> Forjando o Reino da Ampliação (A Arena Crítica)..."
+echo ""
+echo "[3/5] Configurando ambiente de upscale..."
 python3 -m venv "$VENV_UPSCALE_DIR"
-echo "   -> Armando o ambiente com ferramentas de construção (wheel/setuptools)..."
 "$PYTHON_UPSCALE" -m pip install --no-cache-dir --upgrade pip wheel setuptools
 
-echo "   -> Invocando PyTorch..."
+echo ""
+echo "[4/5] Instalando PyTorch (1-2 min)..."
 eval "$TORCH_CMD"
 
-echo "   -> Instalando servos (basicsr/realesrgan) usando ferramentas locais..."
+echo ""
+echo "[5/5] Compilando RealESRGAN (LENTO - 5-10 min)..."
+echo "      Aguarde, isso e normal na primeira instalacao..."
 "$PYTHON_UPSCALE" -m pip install --no-cache-dir --no-build-isolation -r ./src/requirements_upscale.txt
 
-echo "--> Escrevendo o Mapa da Criação..."
+echo "--> Criando arquivo de configuracao..."
 cat > "$APP_DIR/config.json" << EOL
 {
     "PYTHON_REMBG": "$PYTHON_REMBG",
@@ -75,7 +83,7 @@ cp -r ./src "$APP_DIR/"
 cp -r ./assets "$APP_DIR/"
 cp ./uninstall.sh "$APP_DIR/" && chmod +x "$APP_DIR/uninstall.sh"
 
-echo "--> Finalizando rituais de ícone e desktop..."
+echo "--> Instalando icones e atalho..."
 for size in 16 32 64 128; do
     ICON_DIR="$HOME/.local/share/icons/hicolor/${size}x${size}/apps"
     mkdir -p "$ICON_DIR"
@@ -87,7 +95,7 @@ mkdir -p "$DESKTOP_INSTALL_DIR"
 cat > "$DESKTOP_INSTALL_DIR/fogstripper.desktop" << EOL
 [Desktop Entry]
 Name=FogStripper
-Comment=Remove o fundo de imagens com IA
+Comment=Removedor de fundo de imagens
 Exec=$PYTHON_GUI $APP_DIR/src/main.py
 Icon=fogstripper
 Type=Application
@@ -101,6 +109,6 @@ gtk-update-icon-cache -q -f -t "$HOME/.local/share/icons/hicolor"
 
 echo ""
 echo "######################################################################"
-echo "VITÓRIA. O PROCESSO FOI CONCLUÍDO."
-echo "Execute o Ritual do Renascimento (reinicie ou faça logoff) agora."
+echo "INSTALACAO CONCLUIDA."
+echo "Reinicie a sessao ou faca logoff para o atalho aparecer no menu."
 echo "######################################################################"

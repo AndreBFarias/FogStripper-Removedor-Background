@@ -1,0 +1,101 @@
+name: Bug Report
+description: Reportar um bug no FogStripper
+title: "[BUG] "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por reportar este bug. Preencha as informacoes abaixo.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Descricao do Bug
+      description: Uma descricao clara e concisa do bug.
+      placeholder: O que aconteceu?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para Reproduzir
+      description: Passos para reproduzir o comportamento.
+      placeholder: |
+        1. Abrir o aplicativo
+        2. Clicar em '...'
+        3. Ver o erro
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento Esperado
+      description: O que deveria ter acontecido?
+      placeholder: Descreva o comportamento esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Se aplicavel, adicione screenshots.
+      placeholder: Arraste imagens aqui
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema Operacional
+      options:
+        - Linux (Ubuntu/Pop!_OS)
+        - Linux (Fedora/RHEL)
+        - Linux (Arch)
+        - Windows 10
+        - Windows 11
+        - macOS
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Versao do Python
+      description: Execute `python --version`
+      placeholder: "3.10.12"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: gpu
+    attributes:
+      label: GPU
+      options:
+        - NVIDIA (CUDA disponivel)
+        - AMD
+        - Intel
+        - Sem GPU dedicada
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs de Erro
+      description: Cole os logs de erro aqui.
+      render: shell
+      placeholder: |
+        Traceback (most recent call last):
+          ...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: Verifiquei se nao existe uma issue similar
+          required: true
+        - label: Estou usando a versao mais recente
+          required: true

@@ -1,0 +1,52 @@
+name: Feature Request
+description: Sugerir uma nova funcionalidade
+title: "[FEATURE] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por sugerir uma nova funcionalidade.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou Motivacao
+      description: Descreva o problema que esta tentando resolver.
+      placeholder: Estou frustrado quando...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solucao Proposta
+      description: Descreva a solucao que gostaria.
+      placeholder: Gostaria que o FogStripper...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas Consideradas
+      description: Outras solucoes que considerou.
+      placeholder: Tambem pensei em...
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridade
+      options:
+        - Alta - Essencial para meu uso
+        - Media - Seria muito util
+        - Baixa - Nice to have
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribuicao
+      options:
+        - label: Estou disposto a contribuir com um PR para isso
