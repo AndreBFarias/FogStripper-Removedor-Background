@@ -171,7 +171,7 @@ pycocotools==2.0.10
 pycparser==2.23
 pycups==2.0.1
 pydantic==2.12.3
-pydantic_core==2.41.4
+pydantic_core==2.41.5
 pydbus==0.6.0
 pydub==0.25.1
 Pygments==2.19.2
