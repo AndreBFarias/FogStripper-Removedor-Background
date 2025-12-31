@@ -10,7 +10,7 @@ jobs:
     name: Build .deb Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Build Debian Package
         run: |
@@ -18,10 +18,11 @@ jobs:
           ./scripts/build_deb.sh
 
       - name: Upload .deb
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: fogstripper-deb
           path: fogstripper_*.deb
+          compression-level: 0 # Faster, .deb is already compressed
 
   release:
     name: Create GitHub Release
@@ -30,15 +31,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download .deb
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: fogstripper-deb
+          # v4 downloads to current dir by default if no path specified, but let's be explicit to avoid directory nesting
+          path: .
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             fogstripper_*.deb
