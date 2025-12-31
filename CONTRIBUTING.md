@@ -1,6 +1,6 @@
 # Contribuindo
 
-Veja a documentacao completa em [docs/development/contributing.md](docs/development/contributing.md) ou na [documentacao online](https://andrebfarias.github.io/FogStripper-Removedor-Background/development/contributing/).
+Veja a documentacao completa em [docs/development/contributing.md](docs/development/contributing.md).
 
 ## Inicio Rapido
 
