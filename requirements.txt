@@ -162,7 +162,7 @@ proton-keyring-linux==0.2.1
 proton-vpn-api-core==4.14.1
 proton-vpn-daemon==0.13.4
 proton-vpn-gtk-app==4.13.1
-psutil==5.9.0
+psutil==7.2.1
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
 PyAudio==0.2.14
