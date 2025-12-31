@@ -15,7 +15,7 @@ os.chdir(PROJECT_ROOT)
 
 def run_pip_install(python_executable, packages):
     command = [python_executable, "-m", "pip", "install", "--no-cache-dir"] + packages
-    print(f"--> Executando: {' '.join(command)}", flush=True)
+    print(f">> Executando: {' '.join(command)}", flush=True)
     pip_env = os.environ.copy()
     pip_env["TMPDIR"] = os.path.join(os.path.expanduser("~"), ".pip_tmp")
     os.makedirs(pip_env["TMPDIR"], exist_ok=True)
@@ -23,17 +23,17 @@ def run_pip_install(python_executable, packages):
 
 try:
     subprocess.run(["nvidia-smi"], capture_output=True, check=True)
-    print("--> Detectada GPU NVIDIA. Usando CUDA.", flush=True)
+    print(">> Detectada GPU NVIDIA. Usando CUDA.", flush=True)
     REMBG_REQS = "src/requirements_rembg.txt"
 
     TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cu117"]
 except (subprocess.CalledProcessError, FileNotFoundError):
-    print("--> Nenhuma GPU NVIDIA detectada. Usando CPU.", flush=True)
+    print(">> Nenhuma GPU NVIDIA detectada. Usando CPU.", flush=True)
     REMBG_REQS = "src/requirements_rembg_cpu.txt"
     TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cpu"]
 
 if not os.path.exists(VENV_DIR):
-    print(f"--> Criando ambiente de desenvolvimento isolado em: {VENV_DIR}", flush=True)
+    print(f">> Criando ambiente de desenvolvimento isolado em: {VENV_DIR}", flush=True)
     venv.create(VENV_DIR, with_pip=True)
 
 if sys.platform == "win32":
@@ -42,10 +42,10 @@ else:
     python_executable = os.path.join(VENV_DIR, "bin", "python")
 
 try:
-    print("--> Verificando dependencias...", flush=True)
+    print(">> Verificando dependencias...", flush=True)
 
     subprocess.run([python_executable, "-c", "import realesrgan"], check=True, capture_output=True)
-    print("--> Dependencias verificadas.", flush=True)
+    print(">> Dependencias verificadas.", flush=True)
 except (subprocess.CalledProcessError, FileNotFoundError):
     print(flush=True)
     print("=" * 60, flush=True)
@@ -88,7 +88,7 @@ print("\n--- Gerando icones ---", flush=True)
 icon_resizer_script = os.path.join(PROJECT_ROOT, "src", "utils", "icon_resizer.py")
 if os.path.exists(icon_resizer_script):
     subprocess.run([python_executable, icon_resizer_script, PROJECT_ROOT], check=True, capture_output=True)
-    print("--> Icones gerados em 'assets/generated_icons/'.", flush=True)
+    print(">> Icones gerados em 'assets/generated_icons/'.", flush=True)
 print("--- Fim da geracao de icones ---\n", flush=True)
 
 config_path = os.path.join(PROJECT_ROOT, "config.dev.json")
@@ -100,7 +100,7 @@ dev_config = {
     "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_effects.py"),
     "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_background.py")
 }
-print(f"--> Criando configuracao de desenvolvimento em: {config_path}", flush=True)
+print(f">> Criando configuracao de desenvolvimento em: {config_path}", flush=True)
 with open(config_path, 'w') as f:
     json.dump(dev_config, f, indent=4)
 
@@ -110,13 +110,13 @@ env["FOGSTRIPPER_DEV_MODE"] = "1"
 env["PYTHONPATH"] = os.path.join(PROJECT_ROOT, "src") + os.pathsep + env.get("PYTHONPATH", "")
 
 try:
-    print(f"--> Invocando a aplicação principal: {main_script_path}", flush=True)
+    print(f">> Invocando a aplicação principal: {main_script_path}", flush=True)
     subprocess.run([python_executable, main_script_path], env=env)
 except (subprocess.CalledProcessError, KeyboardInterrupt):
-    print("\n--> Aplicação encerrada.", flush=True)
+    print("\n>> Aplicação encerrada.", flush=True)
 finally:
     if os.path.exists(config_path):
-        print("--> Removendo configuracao temporaria...", flush=True)
+        print(">> Removendo configuracao temporaria...", flush=True)
         os.remove(config_path)
 
 print("### Sessao de Desenvolvimento Concluida ###", flush=True)

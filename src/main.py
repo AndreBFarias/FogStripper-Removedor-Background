@@ -16,9 +16,9 @@ try:
 except ImportError as e:
     logging.critical(f"Falha ao importar dependências críticas da GUI: {e}")
 
-    print("\n--> ERRO: Dependências da interface não encontradas.")
-    print("--> Se este for o primeiro uso do dev_run.py, isso é esperado.")
-    print("--> O script tentará instalá-las agora. Por favor, aguarde.")
+    print("\n>> ERRO: Dependências da interface não encontradas.")
+    print(">> Se este for o primeiro uso do dev_run.py, isso é esperado.")
+    print(">> O script tentará instalá-las agora. Por favor, aguarde.")
     sys.exit(1)
 
 def handle_exception(exc_type, exc_value, exc_traceback):
