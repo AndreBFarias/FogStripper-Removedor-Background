@@ -17,16 +17,33 @@ jobs:
           chmod +x scripts/build_deb.sh
           ./scripts/build_deb.sh
 
-      - name: Upload .deb
+  build-flatpak:
+    name: Build Flatpak Bundle
+    runs-on: ubuntu-latest
+    container:
+      image: bilelmoussaoui/flatpak-github-actions:kde-6.6
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Flatpak
+        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
+        with:
+          bundle: fogstripper.flatpak
+          manifest-path: com.github.FogStripper.yml
+          repository-url: https://flathub.org/repo/flathub.flatpakrepo
+          cache: true
+
+      - name: Upload Flatpak Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: fogstripper-deb
-          path: fogstripper_*.deb
-          compression-level: 0 # Faster, .deb is already compressed
+          name: fogstripper-flatpak
+          path: fogstripper.flatpak
+          compression-level: 0
 
   release:
     name: Create GitHub Release
-    needs: build-deb
+    needs: [build-deb, build-flatpak]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -37,7 +54,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: fogstripper-deb
-          # v4 downloads to current dir by default if no path specified, but let's be explicit to avoid directory nesting
+          path: .
+
+      - name: Download Flatpak
+        uses: actions/download-artifact@v4
+        with:
+          name: fogstripper-flatpak
           path: .
 
       - name: Create Release
@@ -45,6 +67,7 @@ jobs:
         with:
           files: |
             fogstripper_*.deb
+            fogstripper.flatpak
             com.github.FogStripper.yml
           draft: true
           prerelease: false
