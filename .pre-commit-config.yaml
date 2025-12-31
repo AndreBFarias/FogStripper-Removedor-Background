@@ -4,56 +4,56 @@ repos:
       - id: check-anonymity
         name: "[01/13] Anonimato"
         language: system
-        entry: bash src/tools/check_anonymity.sh
+        entry: bash scripts/qa/check_anonymity.sh
         pass_filenames: false
         always_run: true
 
       - id: check-external-ids
         name: "[02/13] IDs Externos"
         language: system
-        entry: bash src/tools/check_external_ids.sh
+        entry: bash scripts/qa/check_external_ids.sh
         pass_filenames: false
         always_run: true
 
       - id: check-test-data
         name: "[03/13] Dados de teste"
         language: system
-        entry: bash src/tools/check_test_data.sh
+        entry: bash scripts/qa/check_test_data.sh
         pass_filenames: false
         always_run: true
 
       - id: check-tests-exist
         name: "[04/13] Testes existem"
         language: system
-        entry: bash src/tools/check_tests_exist.sh
+        entry: bash scripts/qa/check_tests_exist.sh
         pass_filenames: false
         always_run: true
 
       - id: check-test-quality
         name: "[05/13] Qualidade dos testes"
         language: system
-        entry: bash src/tools/check_test_quality.sh
+        entry: bash scripts/qa/check_test_quality.sh
         pass_filenames: false
         stages: [pre-push]
 
       - id: no-silent-except
         name: "[06/13] Except silenciosos"
         language: system
-        entry: bash src/tools/check_silent_except.sh
+        entry: bash scripts/qa/check_silent_except.sh
         pass_filenames: false
         always_run: true
 
       - id: no-manual-lock-acquire
         name: "[07/13] Lock manual"
         language: system
-        entry: bash src/tools/check_manual_lock.sh
+        entry: bash scripts/qa/check_manual_lock.sh
         pass_filenames: false
         always_run: true
 
       - id: check-file-size
         name: "[08/13] God Mode Prevention (max 300 linhas)"
         language: system
-        entry: bash src/tools/check_file_size.sh
+        entry: bash scripts/qa/check_file_size.sh
         pass_filenames: false
         always_run: true
 
@@ -67,21 +67,21 @@ repos:
       - id: check-orphan-code
         name: "[10/17] Codigo orfao"
         language: system
-        entry: bash src/tools/check_orphan_code.sh
+        entry: bash scripts/qa/check_orphan_code.sh
         pass_filenames: false
         stages: [pre-push]
 
       - id: check-logger-usage
         name: "[11/17] Logger obrigatorio"
         language: system
-        entry: bash src/tools/check_logger_usage.sh
+        entry: bash scripts/qa/check_logger_usage.sh
         pass_filenames: false
         always_run: true
 
       - id: check-docstrings
         name: "[12/17] Docstrings"
         language: system
-        entry: bash src/tools/check_docstrings.sh
+        entry: bash scripts/qa/check_docstrings.sh
         pass_filenames: false
         always_run: true
 
@@ -89,14 +89,14 @@ repos:
       - id: check-type-hints
         name: "[13/17] Type hints"
         language: system
-        entry: bash src/tools/check_type_hints.sh
+        entry: bash scripts/qa/check_type_hints.sh
         pass_filenames: false
         stages: [pre-push]
 
       - id: check-complexity
         name: "[14/18] Complexidade ciclomatica"
         language: system
-        entry: bash src/tools/check_complexity.sh
+        entry: bash scripts/qa/check_complexity.sh
         pass_filenames: false
         stages: [pre-push]
 
@@ -107,6 +107,12 @@ repos:
         pass_filenames: false
         always_run: true
 
+      - id: check-structure
+        name: "[00/XX] Verificacao de Estrutura"
+        language: system
+        entry: python3 scripts/check_structure.py
+        pass_filenames: false
+        always_run: true
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.4

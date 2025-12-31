@@ -1,87 +1,60 @@
-<div align="center">
+# FogStripper - Removedor de Fundo 🌫️
 
-[![CI](https://github.com/AndreBFarias/FogStripper-Removedor-Background/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreBFarias/FogStripper-Removedor-Background/actions/workflows/ci.yml)
-[![Docs](https://github.com/AndreBFarias/FogStripper-Removedor-Background/actions/workflows/docs.yml/badge.svg)](https://andrebfarias.github.io/FogStripper-Removedor-Background/)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-[![Estrelas](https://img.shields.io/github/stars/AndreBFarias/FogStripper-Removedor-Background.svg?style=social)](https://github.com/AndreBFarias/FogStripper-Removedor-Background/stargazers)
-[![Contribuicoes](https://img.shields.io/badge/contribuicoes-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
+FogStripper é uma aplicação desktop robusta para remover fundos de imagens e vídeos usando IA, com suporte a upscale e efeitos visuais.
 
----
+## 🚀 Funcionalidades
 
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="120" alt="FogStripper">
+- **Remoção de Fundo**: Utiliza `rembg` (u2net, isnet, etc.) para recortes precisos.
+- **Upscale IA**: Aumenta a resolução com Real-ESRGAN (2x, 4x).
+- **Processamento em Lote**: Arraste múltiplas imagens ou pastas.
+- **Animações e Vídeos**: Suporte a GIF, MP4, WEBM (experimental).
+- **Efeitos**: Sombras, bordas suaves e substituição de fundo.
+- **Interface Moderna**: GUI em PyQt6 com tema escuro e responsivo.
 
-<h1>FogStripper</h1>
+## 📂 Estrutura do Projeto
 
-</div>
-
----
-
-Aplicacao desktop Linux para remocao automatica de fundos de imagens. Usa modelos de segmentacao para separar objetos do fundo com precisao.
-
----
-
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
-
-### Funcionalidades
-
-- **Remocao de Fundo:** Multiplos modelos de segmentacao disponiveis:
-    - `u2net` / `u2netp`: Uso geral, bom equilibrio velocidade/qualidade
-    - `u2net_human_seg`: Otimizado para figuras humanas
-    - `isnet-general-use`: Alta precisao para objetos complexos
-
-- **Upscale (Real-ESRGAN):** Aumente a resolucao das imagens em 2x ou 4x
-
-- **Pos-Processamento:**
-    - Composicao de fundo (cor solida ou imagem)
-    - Projecao de sombra
-    - Recorte automatico (trim)
-    - Preenchimento de buracos
-    - Limpeza de ruido
-
-- **Animacoes:** Suporte a GIF e WEBM, processamento frame a frame
-
-- **Exportacao:** PNG, WEBP, SVG, GIF
-
-- **Interface:** Drag and drop, feedback de progresso
-
-### Arquitetura
-
-O projeto usa 3 ambientes virtuais isolados para evitar conflitos de dependencias:
-
-1. `venv_gui`: Interface (PyQt6)
-2. `venv_rembg`: Segmentacao (rembg, ONNX)
-3. `venv_upscale`: Upscale (Real-ESRGAN, PyTorch)
-
-### Instalacao
-
-```bash
-git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
-cd FogStripper-Removedor-Background
-
-chmod +x install.sh
-./install.sh
+```
+FogStripper/
+├── src/
+│   ├── core/           # Núcleo (logger, processamento, config)
+│   ├── gui/            # Interface gráfica (PyQt6)
+│   ├── workers/        # Scripts de IA (Rembg, Upscale)
+│   ├── utils/          # Utilitários (ícones, svg)
+│   └── main.py         # Ponto de entrada
+├── scripts/
+│   ├── qa/             # Scripts de qualidade (hooks git)
+│   └── install_hooks.sh
+├── dev-journey/        # Documentação do projeto (Status, Debt)
+├── requirements.txt    # Dependências unificadas
+├── dev_run.py          # Script de desenvolvimento
+└── README.md
 ```
 
-### Dependencias
+## 🛠️ Instalação e Uso
 
-- **PyQt6**: Interface grafica
-- **rembg**: Remocao de fundo
-- **Pillow**: Manipulacao de imagens
-- **Real-ESRGAN**: Upscale (opcional)
+1.  **Pré-requisitos**: Python 3.10+ e Drivers NVIDIA (opcional, para GPU).
+2.  **Instalação**:
+    ```bash
+    git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
+    cd FogStripper-Removedor-Background
+    pip install -r requirements.txt
+    ```
+3.  **Executar (Modo Dev)**:
+    ```bash
+    python3 dev_run.py
+    ```
 
-### Uso
+## 🤝 Contribuindo
 
-1. Arraste imagens para a janela ou clique em "Selecione Imagens"
-2. Ajuste potencia e opcoes de pos-processamento
-3. Clique em processar
+Consulte `CONTRIBUTING.md` para diretrizes de código. O projeto utiliza `pre-commit` para garantir qualidade.
 
-### Documentacao
+1.  Instale os hooks: `./scripts/install_hooks.sh`
+2.  Siga o padrão de commits.
 
-Disponivel em: **[andrebfarias.github.io/FogStripper-Removedor-Background](https://andrebfarias.github.io/FogStripper-Removedor-Background/)**
+## 📄 Licença
 
-### Licenca
-
-GPL v3 - Livre para modificar e usar.
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.

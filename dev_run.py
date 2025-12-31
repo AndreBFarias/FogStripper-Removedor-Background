@@ -82,10 +82,10 @@ config_path = os.path.join(PROJECT_ROOT, "config.dev.json")
 dev_config = {
     "PYTHON_REMBG": python_executable,
     "PYTHON_UPSCALE": python_executable,
-    "REMBG_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_rembg.py"),
-    "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_upscale.py"),
-    "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_effects.py"),
-    "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_background.py"),
+    "REMBG_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_rembg.py"),
+    "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_upscale.py"),
+    "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_effects.py"),
+    "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_background.py"),
 }
 print(f">> Criando configuracao de desenvolvimento em: {config_path}", flush=True)
 with open(config_path, "w") as f:
