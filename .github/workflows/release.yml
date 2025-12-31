@@ -20,11 +20,11 @@ jobs:
   build-flatpak:
     name: Build Flatpak Bundle
     runs-on: ubuntu-latest
-    container:
-      image: bilelmoussaoui/flatpak-github-actions:kde-6.6
-      options: --privileged
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Flatpak
+        uses: flatpak/flatpak-github-actions/setup-flatpak@v1
 
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
@@ -33,6 +33,9 @@ jobs:
           manifest-path: com.github.FogStripper.yml
           repository-url: https://flathub.org/repo/flathub.flatpakrepo
           cache: true
+          # Important: Allow network access for pip install inside the builder
+          build-args: |
+            --share=network
 
       - name: Upload Flatpak Bundle
         uses: actions/upload-artifact@v4
