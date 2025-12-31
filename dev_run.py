@@ -51,34 +51,19 @@ try:
 except (subprocess.CalledProcessError, FileNotFoundError):
     print(flush=True)
     print("=" * 60, flush=True)
-    print("  INSTALACAO DE DEPENDENCIAS (PRIMEIRA EXECUCAO)", flush=True)
-    print("  AVISO: Este processo pode levar 10-15 minutos!", flush=True)
+    print("=" * 60, flush=True)
+    print("  INSTALACAO DE DEPENDENCIAS", flush=True)
+    print("  (Isso pode demorar alguns minutos na primeira vez)", flush=True)
     print("=" * 60, flush=True)
     print(flush=True)
 
-    print("[1/6] Atualizando pip...", flush=True)
+    print("[1/2] Atualizando pip...", flush=True)
     run_pip_install(python_executable, ["--upgrade", "pip"])
 
     print(flush=True)
-    print("[2/6] Instalando dependencias da interface (rapido)...", flush=True)
+    print("[2/2] Instalando todas as dependencias do projeto...", flush=True)
+    # Using the unified requirements.txt which includes rembg, torch, realesrgan etc.
     run_pip_install(python_executable, ["-r", "requirements.txt"])
-
-    print(flush=True)
-    print("[3/6] Instalando dependencias de remocao de fundo (1-2 min)...", flush=True)
-    run_pip_install(python_executable, ["-r", REMBG_REQS])
-
-    print(flush=True)
-    print("[4/6] Instalando PyTorch (1-2 min)...", flush=True)
-    run_pip_install(python_executable, TORCH_PACKAGES)
-
-    print(flush=True)
-    print("[5/6] Compilando RealESRGAN (LENTO - 5-10 min)...", flush=True)
-    print("      Aguarde, isso e normal na primeira execucao...", flush=True)
-    run_pip_install(python_executable, ["basicsr==1.4.2", "realesrgan==0.3.0"])
-
-    print(flush=True)
-    print("[6/6] Ajustando numpy...", flush=True)
-    run_pip_install(python_executable, ["--force-reinstall", "numpy==1.26.4"])
 
     print(flush=True)
     print("=" * 60, flush=True)
