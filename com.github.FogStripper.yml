@@ -21,32 +21,30 @@ modules:
         url: https://potrace.sourceforge.net/download/1.16/potrace-1.16.tar.gz
         sha256: e40ac0a62423583c44b9a22353101e434b7f590d6e61501c5f3e7f48a97c92a9
 
-  # 2. Módulo Python principal que constrói os 3 venvs
-  - name: fogstripper-python-venvs
+  # 2. Módulo Python principal que constrói o venv unificado
+  - name: fogstripper-python-venv
     buildsystem: simple
     build-commands:
       # Caminho de instalação dentro do sandbox do Flatpak
       - INSTALL_PREFIX=/app
 
-      # --- Criação e Instalação dos Venvs (Sempre versão CPU para portabilidade) ---
-      - python3 -m venv $INSTALL_PREFIX/venv_gui
-      - $INSTALL_PREFIX/venv_gui/bin/pip install --no-cache-dir --upgrade pip
-      - $INSTALL_PREFIX/venv_gui/bin/pip install --no-cache-dir -r requirements.txt
+      # --- Criação e Instalação do Venv Unificado ---
+      - python3 -m venv $INSTALL_PREFIX/venv
+      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
 
-      - python3 -m venv $INSTALL_PREFIX/venv_rembg
-      - $INSTALL_PREFIX/venv_rembg/bin/pip install --no-cache-dir --upgrade pip
-      - $INSTALL_PREFIX/venv_rembg/bin/pip install --no-cache-dir -r src/requirements_rembg_cpu.txt
+      # Instalação do PyTorch CPU (Flatpak geralmente não tem acesso fácil ao CUDA host environment, vamos de CPU safe)
+      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==1.13.1 torchvision==0.14.1
 
-      - python3 -m venv $INSTALL_PREFIX/venv_upscale
-      - $INSTALL_PREFIX/venv_upscale/bin/pip install --no-cache-dir --upgrade pip
-      - $INSTALL_PREFIX/venv_upscale/bin/pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==1.13.1 torchvision==0.14.1
-      - $INSTALL_PREFIX/venv_upscale/bin/pip install --no-cache-dir -r src/requirements_upscale.txt
-      - $INSTALL_PREFIX/venv_upscale/bin/pip install --no-cache-dir --force-reinstall "numpy==1.26.4"
+      # Instalação das dependências gerais
+      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir -r requirements.txt
 
       # --- Copiando os arquivos da aplicação ---
       - mkdir -p $INSTALL_PREFIX/bin
-      - cp -r src $INSTALL_PREFIX/src
+      - mkdir -p $INSTALL_PREFIX/src
+      - cp -r src/* $INSTALL_PREFIX/src/
       - cp -r assets $INSTALL_PREFIX/assets
+
+      # Launcher script
       - cp fogstripper-launcher.sh $INSTALL_PREFIX/bin/
       - chmod +x $INSTALL_PREFIX/bin/fogstripper-launcher.sh
 
@@ -54,12 +52,12 @@ modules:
       - |
         cat > "$INSTALL_PREFIX/src/config.json" << EOL
         {
-            "PYTHON_REMBG": "$INSTALL_PREFIX/venv_rembg/bin/python3",
-            "PYTHON_UPSCALE": "$INSTALL_PREFIX/venv_upscale/bin/python3",
-            "REMBG_SCRIPT": "$INSTALL_PREFIX/src/worker_rembg.py",
-            "UPSCALE_SCRIPT": "$INSTALL_PREFIX/src/worker_upscale.py",
-            "EFFECTS_SCRIPT": "$INSTALL_PREFIX/src/worker_effects.py",
-            "BACKGROUND_SCRIPT": "$INSTALL_PREFIX/src/worker_background.py"
+            "PYTHON_REMBG": "$INSTALL_PREFIX/venv/bin/python3",
+            "PYTHON_UPSCALE": "$INSTALL_PREFIX/venv/bin/python3",
+            "REMBG_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_rembg.py",
+            "UPSCALE_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_upscale.py",
+            "EFFECTS_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_effects.py",
+            "BACKGROUND_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_background.py"
         }
         EOL
     sources:
