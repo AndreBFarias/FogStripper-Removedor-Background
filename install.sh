@@ -4,86 +4,73 @@ set -e
 APP_WM_CLASS="FogStripper"
 
 echo "============================================================"
-echo "  FOGSTRIPPER - INSTALACAO"
-echo "  AVISO: Este processo pode levar 10-15 minutos!"
+echo "  FOGSTRIPPER - INSTALACAO SIMPLIFICADA"
+echo "  AVISO: Este processo pode levar alguns minutos."
 echo "============================================================"
 echo ""
+
+# Definir diretorios
 APP_DIR="$HOME/.local/share/fogstripper"
 PROJECT_ROOT=$(pwd)
+VENV_DIR="$APP_DIR/venv"
+PYTHON_EXEC="$VENV_DIR/bin/python3"
 
+# Configurar TMPDIR local para evitar falta de espaco em /tmp
+# Isso resolve o problema de travamento no basicsr/realesrgan
+export TMPDIR="$HOME/.pip_tmp_fogstripper"
+mkdir -p "$TMPDIR"
+echo ">> Configurando diretorio temporario: $TMPDIR"
+
+# Limpar instalacao antiga
 if [ -d "$APP_DIR" ]; then
-    echo "--> Removendo instalacao anterior..."
+    echo ">> Removendo instalacao anterior..."
     rm -rf "$APP_DIR"
 fi
 mkdir -p "$APP_DIR"
 
-echo "--> Gerando icones..."
-ICON_TOOL_VENV="$PROJECT_ROOT/.venv_icon_temp"
-python3 -m venv "$ICON_TOOL_VENV"
-"$ICON_TOOL_VENV/bin/python3" -m pip install --upgrade pip > /dev/null
-"$ICON_TOOL_VENV/bin/python3" -m pip install Pillow > /dev/null
-"$ICON_TOOL_VENV/bin/python3" "$PROJECT_ROOT/src/utils/icon_resizer.py" "$PROJECT_ROOT"
-rm -rf "$ICON_TOOL_VENV"
-echo "--> Icones gerados."
-
-VENV_GUI_DIR="$APP_DIR/venv_gui"
-VENV_REMBG_DIR="$APP_DIR/venv_rembg"
-VENV_UPSCALE_DIR="$APP_DIR/venv_upscale"
-PYTHON_GUI="$VENV_GUI_DIR/bin/python3"
-PYTHON_REMBG="$VENV_REMBG_DIR/bin/python3"
-PYTHON_UPSCALE="$VENV_UPSCALE_DIR/bin/python3"
-
-if command -v nvidia-smi &> /dev/null; then
-    echo "--> GPU NVIDIA detectada. Configurando CUDA..."
-    REMBG_REQS="./src/requirements_rembg.txt"
-    TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117'
-else
-    echo "--> GPU NVIDIA nao encontrada. Usando CPU..."
-    REMBG_REQS="./src/requirements_rembg_cpu.txt"
-    TORCH_CMD='"$PYTHON_UPSCALE" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu'
-fi
-
-echo "[1/5] Configurando ambiente da interface (rapido)..."
-python3 -m venv "$VENV_GUI_DIR"
-"$PYTHON_GUI" -m pip install --no-cache-dir --upgrade pip wheel setuptools
-"$PYTHON_GUI" -m pip install --no-cache-dir -r ./requirements.txt
+echo ">> Gerando icones..."
+python3 -m venv "$VENV_DIR"
+"$PYTHON_EXEC" -m pip install --upgrade pip setuptools wheel > /dev/null
+"$PYTHON_EXEC" -m pip install Pillow > /dev/null
+"$PYTHON_EXEC" "$PROJECT_ROOT/src/utils/icon_resizer.py" "$PROJECT_ROOT"
+echo ">> Icones gerados."
 
 echo ""
-echo "[2/5] Configurando ambiente de remocao de fundo (1-2 min)..."
-python3 -m venv "$VENV_REMBG_DIR"
-"$PYTHON_REMBG" -m pip install --no-cache-dir --upgrade pip wheel setuptools
-"$PYTHON_REMBG" -m pip install --no-cache-dir -r "$REMBG_REQS"
+echo "[1/3] Configurando ambiente virtual unificado..."
+# Instalando PyTorch primeiro para garantir binarios
+echo ">> Instalando Core e PyTorch (isso ajuda a evitar compilacao desnecessaria)..."
+"$PYTHON_EXEC" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cu117 || \
+"$PYTHON_EXEC" -m pip install --no-cache-dir torch==1.13.1 torchvision==0.14.1 --index-url https://download.pytorch.org/whl/cpu
 
 echo ""
-echo "[3/5] Configurando ambiente de upscale..."
-python3 -m venv "$VENV_UPSCALE_DIR"
-"$PYTHON_UPSCALE" -m pip install --no-cache-dir --upgrade pip wheel setuptools
+echo "[2/3] Instalando demais dependencias (pode demorar um pouco)..."
+# Instalando o resto do requirements.txt
+"$PYTHON_EXEC" -m pip install --no-cache-dir -r ./requirements.txt
 
 echo ""
-echo "[4/5] Instalando PyTorch (1-2 min)..."
-eval "$TORCH_CMD"
+echo "[3/3] Configurando sistema..."
 
-echo ""
-echo "[5/5] Compilando RealESRGAN (LENTO - 5-10 min)..."
-echo "      Aguarde, isso e normal na primeira instalacao..."
-"$PYTHON_UPSCALE" -m pip install --no-cache-dir --no-build-isolation -r ./src/requirements_upscale.txt
-
-echo "--> Criando arquivo de configuracao..."
+echo ">> Criando arquivo de configuracao..."
+# Agora usamos o MESMO python para tudo, pois unificamos o venv
 cat > "$APP_DIR/config.json" << EOL
 {
-    "PYTHON_REMBG": "$PYTHON_REMBG",
-    "PYTHON_UPSCALE": "$PYTHON_UPSCALE",
-    "REMBG_SCRIPT": "$APP_DIR/src/worker_rembg.py",
-    "UPSCALE_SCRIPT": "$APP_DIR/src/worker_upscale.py",
-    "EFFECTS_SCRIPT": "$APP_DIR/src/worker_effects.py",
-    "BACKGROUND_SCRIPT": "$APP_DIR/src/worker_background.py"
+    "PYTHON_REMBG": "$PYTHON_EXEC",
+    "PYTHON_UPSCALE": "$PYTHON_EXEC",
+    "REMBG_SCRIPT": "$APP_DIR/src/workers/worker_rembg.py",
+    "UPSCALE_SCRIPT": "$APP_DIR/src/workers/worker_upscale.py",
+    "EFFECTS_SCRIPT": "$APP_DIR/src/workers/worker_effects.py",
+    "BACKGROUND_SCRIPT": "$APP_DIR/src/workers/worker_background.py"
 }
 EOL
-cp -r ./src "$APP_DIR/"
+
+# Copiando arquivos fonte
+echo ">> Copiando arquivos..."
+mkdir -p "$APP_DIR/src"
+cp -r ./src/* "$APP_DIR/src/"
 cp -r ./assets "$APP_DIR/"
 cp ./uninstall.sh "$APP_DIR/" && chmod +x "$APP_DIR/uninstall.sh"
 
-echo "--> Instalando icones e atalho..."
+echo ">> Instalando atalhos..."
 for size in 16 32 64 128; do
     ICON_DIR="$HOME/.local/share/icons/hicolor/${size}x${size}/apps"
     mkdir -p "$ICON_DIR"
@@ -96,7 +83,7 @@ cat > "$DESKTOP_INSTALL_DIR/fogstripper.desktop" << EOL
 [Desktop Entry]
 Name=FogStripper
 Comment=Removedor de fundo de imagens
-Exec=$PYTHON_GUI $APP_DIR/src/main.py
+Exec=$PYTHON_EXEC $APP_DIR/src/main.py
 Icon=fogstripper
 Type=Application
 Categories=Graphics;Utility;
@@ -107,8 +94,12 @@ EOL
 update-desktop-database -q "$DESKTOP_INSTALL_DIR"
 gtk-update-icon-cache -q -f -t "$HOME/.local/share/icons/hicolor"
 
+# Limpeza
+rm -rf "$TMPDIR"
+echo ">> Limpeza concluida."
+
 echo ""
 echo "######################################################################"
-echo "INSTALACAO CONCLUIDA."
-echo "Reinicie a sessao ou faca logoff para o atalho aparecer no menu."
+echo "INSTALACAO CONCLUIDA COM SUCESSO!"
+echo "Pode iniciar pelo menu de aplicativos."
 echo "######################################################################"
