@@ -27,15 +27,13 @@ jobs:
         uses: flatpak/flatpak-github-actions/setup-flatpak@v1
 
       - name: Build Flatpak
-        uses: flatpak/flatpak-github-actions/flatpak-builder@v6
-        with:
-          bundle: fogstripper.flatpak
-          manifest-path: com.github.FogStripper.yml
-          repository-url: https://flathub.org/repo/flathub.flatpakrepo
-          cache: true
-          # Important: Allow network access for pip install inside the builder
-          build-args: |
-            --share=network
+        run: |
+          flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y flathub org.kde.Sdk//6.6 org.kde.Platform//6.6
+          # Build with network access enabled
+          flatpak-builder --user --share=network --force-clean --repo=repo build-dir com.github.FogStripper.yml
+          # Create bundle
+          flatpak build-bundle repo fogstripper.flatpak com.github.FogStripper
 
       - name: Upload Flatpak Bundle
         uses: actions/upload-artifact@v4
