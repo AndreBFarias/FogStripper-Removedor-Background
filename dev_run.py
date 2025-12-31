@@ -5,7 +5,8 @@ import subprocess
 import venv
 
 print("=" * 60, flush=True)
-print("  FOGSTRIPPER - MODO DE DESENVOLVEDOR", flush=True)
+print("=" * 60, flush=True)
+print("  FOGSTRIPPER - DEV MODE", flush=True)
 print("=" * 60, flush=True)
 print(flush=True)
 

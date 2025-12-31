@@ -247,12 +247,12 @@ class FogStripperWindow(QWidget):
         settings_container_layout.setContentsMargins(30, 0, 30, 0)
         settings_container_layout.setSpacing(10)  # Standardized spacing
 
-        # "Arsenal Neural" Header Layout (Label + Description)
+        # "Modelo de Processamento" Header Layout (Label + Description)
         arsenal_header_layout = QHBoxLayout()
         arsenal_header_layout.setContentsMargins(0, 0, 0, 0)
         arsenal_header_layout.setSpacing(15)  # Add spacing between title and desc
 
-        arsenal_label = QLabel("Arsenal Neural:")
+        arsenal_label = QLabel("Modelo de Processamento:")
         arsenal_label.setStyleSheet("font-weight: bold;")
         arsenal_header_layout.addWidget(arsenal_label)
 
