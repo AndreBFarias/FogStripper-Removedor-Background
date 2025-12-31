@@ -65,4 +65,3 @@ modules:
     sources:
       - type: dir
         path: . # O diretório atual do projeto
-

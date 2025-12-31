@@ -23,9 +23,7 @@ def load_paths() -> None:
             PATHS = json.load(f)
         logger.info(f"Configuracao ({os.path.basename(CONFIG_PATH)}) carregada.")
     except FileNotFoundError:
-        logger.critical(
-            f"CRITICO: Arquivo de configuracao nao encontrado em {CONFIG_PATH}!"
-        )
+        logger.critical(f"CRITICO: Arquivo de configuracao nao encontrado em {CONFIG_PATH}!")
         PATHS = {}
     except Exception as e:
         logger.critical(f"CRITICO: Falha ao ler configuracao: {e}")

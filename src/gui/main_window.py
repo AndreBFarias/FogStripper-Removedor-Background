@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QCheckBox,
     QColorDialog,
     QComboBox,
+    QDialog,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -28,24 +29,19 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from src.worker_background import BackgroundWorker
-from src.worker_rembg import RembgWorker
+from src.core.logger_config import get_log_path
+from src.core.processor import ProcessThread
 
 # Configuração de Log
 logger = logging.getLogger("FogStripper.MainWindow")
 
-class ProcessThread(QThread):
-    progress_update = pyqtSignal(int)
-    status_update = pyqtSignal(str)
-    finished_signal = pyqtSignal()
-    error_signal = pyqtSignal(str)
-    
-    # ... (Keep ProcessThread content as is, I am only targeting imports and __init__)
-    # Wait, replace_file_content needs contiguous block. 
-    # I'll just target the header and __init__ parts separately if needed, 
-    # or just the __init__ part for resizing and header for imports.
-    # Actually, simplest is to just fix the resize first.
-    
+# ... (Keep ProcessThread content as is, I am only targeting imports and __init__)
+# Wait, replace_file_content needs contiguous block.
+# I'll just target the header and __init__ parts separately if needed,
+# or just the __init__ part for resizing and header for imports.
+# Actually, simplest is to just fix the resize first.
+
+
 # Let's just fix the resize first to be safe.
 
 MODEL_DESCRIPTIONS: dict[str, str] = {
@@ -69,9 +65,7 @@ def create_styled_message_box(
     if informative_text:
         msg_box.setInformativeText(informative_text)
     msg_box.setIcon(icon)
-    msg_box.setStyleSheet(
-        "QLabel{ min-width: 600px; font-size: 13pt; } QPushButton{ font-size: 13pt; padding: 5px; }"
-    )
+    msg_box.setStyleSheet("QLabel{ min-width: 600px; font-size: 13pt; } QPushButton{ font-size: 13pt; padding: 5px; }")
     return msg_box
 
 
@@ -93,14 +87,10 @@ class ProcessingOptionsDialog(QDialog):
 
         self.rb_original = QRadioButton("Manter dimensões originais")
         self.rb_original.setChecked(True)
-        self.rb_original.setToolTip(
-            "Mantém o tamanho original da imagem (ex: 1920x1080), apenas removendo o fundo."
-        )
+        self.rb_original.setToolTip("Mantém o tamanho original da imagem (ex: 1920x1080), apenas removendo o fundo.")
 
         self.rb_trim = QRadioButton("Ajustar e recortar (Trim)")
-        self.rb_trim.setToolTip(
-            "Recorta a imagem para conter apenas o objeto, removendo o espaço vazio transparente."
-        )
+        self.rb_trim.setToolTip("Recorta a imagem para conter apenas o objeto, removendo o espaço vazio transparente.")
 
         group_layout.addWidget(self.rb_original)
         group_layout.addWidget(self.rb_trim)
@@ -125,9 +115,7 @@ class ProcessingOptionsDialog(QDialog):
         self.btn_process = QPushButton("Processar")
         self.btn_process.setFixedSize(BTN_WIDTH, BTN_HEIGHT)
         self.btn_process.clicked.connect(self.accept)
-        self.btn_process.setStyleSheet(
-            "background-color: #4CAF50; color: white; font-weight: bold;"
-        )
+        self.btn_process.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
 
         btn_layout.addStretch()
         btn_layout.addWidget(self.btn_cancel)
@@ -162,7 +150,17 @@ class FogStripperWindow(QWidget):
         self.fill_holes_option: bool = False
 
         self.video_extensions: tuple[str, ...] = (
-            ".mp4", ".mov", ".avi", ".wmv", ".mkv", ".avchd", ".flv", ".webm", ".m4v", ".divx", ".gif"
+            ".mp4",
+            ".mov",
+            ".avi",
+            ".wmv",
+            ".mkv",
+            ".avchd",
+            ".flv",
+            ".webm",
+            ".m4v",
+            ".divx",
+            ".gif",
         )
         self.image_extensions: tuple[str, ...] = (".png", ".jpg", ".jpeg", ".webp")
         self.all_extensions: tuple[str, ...] = self.image_extensions + self.video_extensions
@@ -184,7 +182,9 @@ class FogStripperWindow(QWidget):
         logo_path = os.path.join(os.path.dirname(__file__), "..", "..", "assets", "icon.png")
         pixmap = QPixmap(logo_path)
         if not pixmap.isNull():
-            scaled_pixmap = pixmap.scaled(96, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+            scaled_pixmap = pixmap.scaled(
+                96, 96, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            )
             image = scaled_pixmap.toImage()
             mirrored_image = image.mirrored(True, False)
             self.icon_label.setPixmap(QPixmap.fromImage(mirrored_image))
@@ -194,8 +194,6 @@ class FogStripperWindow(QWidget):
         self.title_label.setStyleSheet("font-size: 22pt; font-weight: bold; margin-left: 10px;")
         header_layout.addWidget(self.title_label)
         header_layout.addStretch()
-
-
 
         main_layout.addLayout(header_layout)
 
@@ -245,47 +243,47 @@ class FogStripperWindow(QWidget):
 
         # Container for Arsenal Header + Settings Box
         settings_container = QWidget()
-        settings_container_layout = QVBoxLayout(settings_container) 
+        settings_container_layout = QVBoxLayout(settings_container)
         settings_container_layout.setContentsMargins(30, 0, 30, 0)
-        settings_container_layout.setSpacing(10) # Standardized spacing
+        settings_container_layout.setSpacing(10)  # Standardized spacing
 
         # "Arsenal Neural" Header Layout (Label + Description)
         arsenal_header_layout = QHBoxLayout()
         arsenal_header_layout.setContentsMargins(0, 0, 0, 0)
-        arsenal_header_layout.setSpacing(15) # Add spacing between title and desc
-        
+        arsenal_header_layout.setSpacing(15)  # Add spacing between title and desc
+
         arsenal_label = QLabel("Arsenal Neural:")
         arsenal_label.setStyleSheet("font-weight: bold;")
         arsenal_header_layout.addWidget(arsenal_label)
-        
+
         self.model_desc_label = QLabel()
         self.model_desc_label.setWordWrap(True)
         self.model_desc_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-        self.model_desc_label.setStyleSheet("font-size: 10pt; color: #aaa; margin-left: 60px;") # Increased indent to 60px
+        self.model_desc_label.setStyleSheet(
+            "font-size: 10pt; color: #aaa; margin-left: 60px;"
+        )  # Increased indent to 60px
         # Add widget with stretch=1 to ensure it takes available space
-        arsenal_header_layout.addWidget(self.model_desc_label, 1) 
-        
+        arsenal_header_layout.addWidget(self.model_desc_label, 1)
+
         settings_container_layout.addLayout(arsenal_header_layout)
 
         # Settings Frame
         settings_frame = QFrame()
         settings_frame.setObjectName("SettingsFrame")
-        settings_frame.setStyleSheet(
-            "#SettingsFrame { border: 1px solid #555; border-radius: 5px; padding: 10px; }"
-        )
+        settings_frame.setStyleSheet("#SettingsFrame { border: 1px solid #555; border-radius: 5px; padding: 10px; }")
         settings_layout = QVBoxLayout(settings_frame)
         settings_layout.setContentsMargins(15, 15, 15, 15)
-        settings_layout.setSpacing(10) # Standardized spacing
-        
+        settings_layout.setSpacing(10)  # Standardized spacing
+
         settings_container_layout.addWidget(settings_frame)
         main_layout.addWidget(settings_container)
 
         ROW_HEIGHT = 30
-        
+
         # 1. Select Engine Label
         engine_label = QLabel("Selecione o Motor Gráfico:")
         settings_layout.addWidget(engine_label)
-        
+
         # 2. Model Combo
         self.model_combo = QComboBox()
         self.model_combo.setFixedHeight(ROW_HEIGHT)
@@ -296,7 +294,7 @@ class FogStripperWindow(QWidget):
         # 3. Formato de Saida
         format_label = QLabel("Formato de Saida:")
         settings_layout.addWidget(format_label)
-        
+
         self.format_combo = QComboBox()
         self.format_combo.setFixedHeight(ROW_HEIGHT)
         self.format_combo.addItems(["PNG", "WEBP", "SVG", "GIF"])
@@ -306,7 +304,7 @@ class FogStripperWindow(QWidget):
         # 4. Potência (Borda)
         power_label = QLabel("Potência (Borda):")
         settings_layout.addWidget(power_label)
-        
+
         self.slider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setFixedHeight(ROW_HEIGHT)
         self.slider.setRange(0, 100)
@@ -316,7 +314,7 @@ class FogStripperWindow(QWidget):
         # 5. Bloco (VRAM)
         vram_label = QLabel("Bloco (VRAM):")
         settings_layout.addWidget(vram_label)
-        
+
         self.tile_slider = QSlider(Qt.Orientation.Horizontal)
         self.tile_slider.setFixedHeight(ROW_HEIGHT)
         self.tile_slider.setRange(256, 1024)
@@ -329,7 +327,7 @@ class FogStripperWindow(QWidget):
 
     def setup_upscale_options(self, layout: QVBoxLayout) -> None:
         self.upscale_group = QGroupBox("Upscale (Melhora na Resolução)")
-        self.upscale_group.setMinimumHeight(90) # Increased height to GUARANTEE border visibility
+        self.upscale_group.setMinimumHeight(90)  # Increased height to GUARANTEE border visibility
         upscale_layout = QHBoxLayout()
         upscale_layout.setContentsMargins(10, 15, 10, 15)
         self.upscale_group.setLayout(upscale_layout)
@@ -340,27 +338,27 @@ class FogStripperWindow(QWidget):
         self.rb_upscale_off.setChecked(True)
         self.rb_upscale_off.toggled.connect(lambda: self.on_upscale_change(0))
         upscale_layout.addWidget(self.rb_upscale_off)
-        
+
         upscale_layout.addStretch(1)
-        
+
         self.rb_upscale_2x = QRadioButton("2x")
         self.rb_upscale_2x.toggled.connect(lambda: self.on_upscale_change(2))
         upscale_layout.addWidget(self.rb_upscale_2x)
-        
+
         upscale_layout.addStretch(1)
-        
+
         self.rb_upscale_3x = QRadioButton("3x")
         self.rb_upscale_3x.toggled.connect(lambda: self.on_upscale_change(3))
         upscale_layout.addWidget(self.rb_upscale_3x)
-        
+
         upscale_layout.addStretch(1)
-        
+
         self.rb_upscale_4x = QRadioButton("4x")
         self.rb_upscale_4x.toggled.connect(lambda: self.on_upscale_change(4))
         upscale_layout.addWidget(self.rb_upscale_4x)
-        
+
         upscale_layout.addStretch(1)
-        
+
         layout.addWidget(self.upscale_group)
 
     def setup_post_processing_ui(self, main_layout: QVBoxLayout) -> None:
@@ -380,13 +378,13 @@ class FogStripperWindow(QWidget):
         vertical_wrapper = QWidget()
         vertical_layout = QVBoxLayout(vertical_wrapper)
         vertical_layout.setContentsMargins(0, 0, 0, 0)
-        vertical_layout.setSpacing(2) # Reduced spacing as requested
-        
+        vertical_layout.setSpacing(2)  # Reduced spacing as requested
+
         self.post_process_checkbox = QCheckBox("Habilitar Pós-Processamento")
         self.post_process_checkbox.toggled.connect(self.toggle_post_processing)
         vertical_layout.addWidget(self.post_process_checkbox)
         vertical_layout.addWidget(self.post_processing_frame)
-        
+
         post_container_layout.addWidget(vertical_wrapper)
 
         self.tabs = QTabWidget()
@@ -408,8 +406,8 @@ class FogStripperWindow(QWidget):
 
         color_layout = QHBoxLayout()
         color_layout.setSpacing(4)
-        color_layout.addStretch() # Push controls to the right
-        
+        color_layout.addStretch()  # Push controls to the right
+
         self.btn_choose_color = QPushButton("Personalizar")
         self.btn_choose_color.setFixedSize(150, 28)
         self.btn_choose_color.clicked.connect(self.choose_color)
@@ -420,9 +418,17 @@ class FogStripperWindow(QWidget):
         color_layout.addWidget(self.color_display)
 
         self.preset_colors: list[str] = [
-            "#282a36", "#44475a", "#f8f8f2", "#6272a4",
-            "#8be9fd", "#50fa7b", "#ffb86c", "#ff79c6",
-            "#bd93f9", "#ff5555", "#f1fa8c", # Removed last color #21222c to fit width
+            "#282a36",
+            "#44475a",
+            "#f8f8f2",
+            "#6272a4",
+            "#8be9fd",
+            "#50fa7b",
+            "#ffb86c",
+            "#ff79c6",
+            "#bd93f9",
+            "#ff5555",
+            "#f1fa8c",  # Removed last color #21222c to fit width
         ]
         self.color_presets: list[QLabel] = []
         for hex_color in self.preset_colors:
@@ -434,25 +440,25 @@ class FogStripperWindow(QWidget):
             preset.mousePressEvent = lambda e, c=hex_color: self.select_preset_color(c)
             color_layout.addWidget(preset)
             self.color_presets.append(preset)
-        
+
         layout.addLayout(color_layout, 0, 1)
 
         self.rb_image_bg = QRadioButton("Imagem de Fundo:")
         self.rb_image_bg.toggled.connect(self.on_background_type_changed)
         self.rb_image_bg.setStyleSheet("margin-left: 20px;")
         layout.addWidget(self.rb_image_bg, 1, 0)
-        
+
         self.btn_choose_image = QPushButton("Selecionar...")
-        self.btn_choose_image.setFixedSize(510, 28) # Exact calculated width (150+26+11*26+12*4 = 510)
+        self.btn_choose_image.setFixedSize(510, 28)  # Exact calculated width (150+26+11*26+12*4 = 510)
         self.btn_choose_image.setEnabled(False)
         self.btn_choose_image.clicked.connect(self.choose_background_image)
         layout.addWidget(self.btn_choose_image, 1, 1, Qt.AlignmentFlag.AlignRight)
 
         self.bg_resize_group = QGroupBox("Modo de Redimensionamento")
         self.bg_resize_group.setEnabled(False)
-        self.bg_resize_group.setMinimumHeight(90) # Match Upscale height
-        bg_resize_layout = QHBoxLayout() # Horizontal layout to match Upscale
-        bg_resize_layout.setContentsMargins(10, 15, 10, 15) # Match Upscale margins
+        self.bg_resize_group.setMinimumHeight(90)  # Match Upscale height
+        bg_resize_layout = QHBoxLayout()  # Horizontal layout to match Upscale
+        bg_resize_layout.setContentsMargins(10, 15, 10, 15)  # Match Upscale margins
         self.bg_resize_group.setLayout(bg_resize_layout)
 
         bg_resize_layout.addStretch(1)
@@ -460,9 +466,9 @@ class FogStripperWindow(QWidget):
         self.rb_fit_bg.setChecked(True)
         self.rb_fit_bg.toggled.connect(lambda: self.on_resize_mode_change("fit-bg-to-fg"))
         bg_resize_layout.addWidget(self.rb_fit_bg)
-        
+
         bg_resize_layout.addStretch(1)
-        
+
         self.rb_fit_fg = QRadioButton("Manter fundo original (Centralizar imagem)")
         self.rb_fit_fg.toggled.connect(lambda: self.on_resize_mode_change("fit-fg-to-bg"))
         bg_resize_layout.addWidget(self.rb_fit_fg)
@@ -651,7 +657,11 @@ class FogStripperWindow(QWidget):
             if path.lower().endswith(self.image_extensions):
                 pixmap = QPixmap(path)
                 if not pixmap.isNull():
-                    thumb_label.setPixmap(pixmap.scaled(68, 68, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+                    thumb_label.setPixmap(
+                        pixmap.scaled(
+                            68, 68, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+                        )
+                    )
                 else:
                     thumb_label.setText("IMG")
             else:

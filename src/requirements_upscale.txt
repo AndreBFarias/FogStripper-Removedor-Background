@@ -3,5 +3,3 @@ basicsr
 imageio[ffmpeg]
 Pillow
 numpy<2.0
-
-

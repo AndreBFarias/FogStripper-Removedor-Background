@@ -41,7 +41,17 @@ class ProcessThread(QThread):
         self.post_processing_opts: dict[str, Any] = post_processing_opts
         self.temp_dir: str = tempfile.mkdtemp(prefix="fogstripper_")
         self.video_extensions: tuple[str, ...] = (
-            ".mp4", ".mov", ".avi", ".wmv", ".mkv", ".avchd", ".flv", ".webm", ".m4v", ".divx", ".gif"
+            ".mp4",
+            ".mov",
+            ".avi",
+            ".wmv",
+            ".mkv",
+            ".avchd",
+            ".flv",
+            ".webm",
+            ".m4v",
+            ".divx",
+            ".gif",
         )
         self.is_animated: bool = self.input_path.lower().endswith(self.video_extensions)
 
@@ -118,10 +128,14 @@ class ProcessThread(QThread):
         rembg_cmd: list[str | None] = [
             PATHS.get("PYTHON_REMBG"),
             PATHS.get("REMBG_SCRIPT"),
-            "--input", step_input_path,
-            "--output", rembg_output,
-            "--model", self.model_name,
-            "--potencia", str(self.potencia),
+            "--input",
+            step_input_path,
+            "--output",
+            rembg_output,
+            "--model",
+            self.model_name,
+            "--potencia",
+            str(self.potencia),
         ]
         if not self.run_command(rembg_cmd):
             raise RuntimeError("Falha na remocao de fundo.")
@@ -236,10 +250,14 @@ class ProcessThread(QThread):
             upscale_cmd: list[str | None] = [
                 PATHS.get("PYTHON_UPSCALE"),
                 PATHS.get("UPSCALE_SCRIPT"),
-                "--input", step_input_path,
-                "--output", upscale_output,
-                "--tile", str(self.tile_size),
-                "--outscale", str(upscale_factor),
+                "--input",
+                step_input_path,
+                "--output",
+                upscale_output,
+                "--tile",
+                str(self.tile_size),
+                "--outscale",
+                str(upscale_factor),
             ]
             if not self.run_command(upscale_cmd):
                 raise RuntimeError("Falha no upscale.")
@@ -252,8 +270,10 @@ class ProcessThread(QThread):
                 effects_cmd: list[str | None] = [
                     PATHS.get("PYTHON_REMBG"),
                     PATHS.get("EFFECTS_SCRIPT"),
-                    "--input", step_input_path,
-                    "--output", shadow_output,
+                    "--input",
+                    step_input_path,
+                    "--output",
+                    shadow_output,
                 ]
                 if not self.run_command(effects_cmd):
                     raise RuntimeError("Falha ao aplicar sombra.")
@@ -267,11 +287,16 @@ class ProcessThread(QThread):
                 background_cmd: list[str | None] = [
                     PATHS.get("PYTHON_REMBG"),
                     PATHS.get("BACKGROUND_SCRIPT"),
-                    "--input", step_input_path,
-                    "--output", background_output,
-                    "--bg-type", bg_type,
-                    "--bg-data", bg_data,
-                    "--resize-mode", self.post_processing_opts.get("background_resize_mode"),
+                    "--input",
+                    step_input_path,
+                    "--output",
+                    background_output,
+                    "--bg-type",
+                    bg_type,
+                    "--bg-data",
+                    bg_data,
+                    "--resize-mode",
+                    self.post_processing_opts.get("background_resize_mode"),
                 ]
                 if not self.run_command(background_cmd):
                     raise RuntimeError("Falha ao aplicar fundo.")
@@ -317,10 +342,14 @@ class ProcessThread(QThread):
             rembg_cmd: list[str | None] = [
                 PATHS.get("PYTHON_REMBG"),
                 PATHS.get("REMBG_SCRIPT"),
-                "--input", frame_path,
-                "--output", processed_frame_path,
-                "--model", self.model_name,
-                "--potencia", str(self.potencia),
+                "--input",
+                frame_path,
+                "--output",
+                processed_frame_path,
+                "--model",
+                self.model_name,
+                "--potencia",
+                str(self.potencia),
             ]
             if not self.run_command(rembg_cmd):
                 raise RuntimeError(f"Falha ao processar o quadro {i}.")

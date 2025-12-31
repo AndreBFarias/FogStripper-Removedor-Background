@@ -21,6 +21,7 @@ except ImportError as e:
     print(">> O script tentará instalá-las agora. Por favor, aguarde.")
     sys.exit(1)
 
+
 def handle_exception(exc_type, exc_value, exc_traceback):
     """Captura exceções não tratadas para evitar que a aplicação feche silenciosamente."""
     if issubclass(exc_type, KeyboardInterrupt):
@@ -40,7 +41,12 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     if msg_box.exec() == QMessageBox.StandardButton.Save:
         log_path = get_log_path()
         if os.path.exists(log_path):
-            save_path, _ = QFileDialog.getSaveFileName(None, "Salvar Relatório de Erro", os.path.expanduser("~/fogstripper_crash_report.log"), "Log Files (*.log)")
+            save_path, _ = QFileDialog.getSaveFileName(
+                None,
+                "Salvar Relatório de Erro",
+                os.path.expanduser("~/fogstripper_crash_report.log"),
+                "Log Files (*.log)",
+            )
             if save_path:
                 try:
                     shutil.copy(log_path, save_path)
@@ -48,6 +54,7 @@ def handle_exception(exc_type, exc_value, exc_traceback):
                     logging.error(f"Não foi possível salvar o log: {e}")
 
     QApplication.instance().quit()
+
 
 sys.excepthook = handle_exception
 

@@ -2,6 +2,7 @@ from PIL import Image
 import os
 import sys
 
+
 def resize_icon(source_path, output_dir, sizes):
     """
     Redimensiona o ícone para múltiplos tamanhos e salva no diretório de saída.
@@ -13,13 +14,14 @@ def resize_icon(source_path, output_dir, sizes):
         sys.exit(1)
 
     os.makedirs(output_dir, exist_ok=True)
-    base_name = "icon" 
+    base_name = "icon"
 
     for size in sizes:
         resized = img.resize((size, size), Image.Resampling.LANCZOS)
         output_path = os.path.join(output_dir, f"{base_name}_{size}x{size}.png")
         resized.save(output_path, "PNG")
         print(f"Ícone salvo em {output_path}")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

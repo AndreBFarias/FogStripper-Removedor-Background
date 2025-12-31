@@ -1,16 +1,16 @@
-#!/bin/sh
-# Install git hooks
+#!/bin/bash
+# install_hooks.sh
+# Instala os hooks do git usando pre-commit framework
 
-HOOK_DIR=".git/hooks"
-SCRIPT_DIR="scripts"
+set -e
 
-if [ ! -d "$HOOK_DIR" ]; then
-    echo "Error: .git directory not found. Are you in the root of the repo?"
-    exit 1
-fi
+# Garantir que estamos na raiz do projeto
+cd "$(dirname "$0")/.."
 
-echo "Installing pre-commit hook..."
-cp "$SCRIPT_DIR/pre-commit" "$HOOK_DIR/pre-commit"
-chmod +x "$HOOK_DIR/pre-commit"
+echo ">> Instalando pre-commit..."
+pip install pre-commit
 
-echo "Hooks installed successfully!"
+echo ">> Configurando hooks do git..."
+pre-commit install
+
+echo ">> Hooks instalados com sucesso!"

@@ -13,6 +13,7 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 VENV_DIR = os.path.join(PROJECT_ROOT, ".dev_venv")
 os.chdir(PROJECT_ROOT)
 
+
 def run_pip_install(python_executable, packages):
     command = [python_executable, "-m", "pip", "install", "--no-cache-dir"] + packages
     print(f">> Executando: {' '.join(command)}", flush=True)
@@ -20,6 +21,7 @@ def run_pip_install(python_executable, packages):
     pip_env["TMPDIR"] = os.path.join(os.path.expanduser("~"), ".pip_tmp")
     os.makedirs(pip_env["TMPDIR"], exist_ok=True)
     subprocess.run(command, check=True, env=pip_env)
+
 
 try:
     subprocess.run(["nvidia-smi"], capture_output=True, check=True)
@@ -98,10 +100,10 @@ dev_config = {
     "REMBG_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_rembg.py"),
     "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_upscale.py"),
     "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_effects.py"),
-    "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_background.py")
+    "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "worker_background.py"),
 }
 print(f">> Criando configuracao de desenvolvimento em: {config_path}", flush=True)
-with open(config_path, 'w') as f:
+with open(config_path, "w") as f:
     json.dump(dev_config, f, indent=4)
 
 main_script_path = os.path.join(PROJECT_ROOT, "src", "main.py")

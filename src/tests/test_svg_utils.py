@@ -25,9 +25,7 @@ class TestRasterToSvg:
         assert 'width="100"' in content
         assert 'height="100"' in content
 
-    def test_conversion_with_transparency(
-        self, sample_image_with_transparency: Path, temp_dir: Path
-    ) -> None:
+    def test_conversion_with_transparency(self, sample_image_with_transparency: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.svg"
         result: bool = raster_to_svg(str(sample_image_with_transparency), str(output_path))
 
