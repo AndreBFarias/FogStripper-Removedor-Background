@@ -144,10 +144,9 @@ jobs:
       - name: Build Flatpak
         run: |
           set -e
-          echo "Building Flatpak with network access..."
+          echo "Building Flatpak..."
           flatpak-builder \
             --user \
-            --share=network \
             --install-deps-from=flathub \
             --force-clean \
             --repo=repo \
