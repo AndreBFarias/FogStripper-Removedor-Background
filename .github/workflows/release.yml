@@ -6,11 +6,71 @@ on:
       - 'v*'
 
 jobs:
-  build-deb:
-    name: Build .deb Package
+  validate:
+    name: Pre-Build Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Generate Icons
+        run: |
+          echo "Installing Pillow for icon generation..."
+          pip install Pillow
+
+          echo "Generating icons from assets/icon.png..."
+          python3 src/utils/icon_resizer.py .
+
+          echo "Icons generated successfully!"
+
+      - name: Validate Project Structure
+        run: |
+          echo "Validating required files and directories..."
+          python3 scripts/check_structure.py
+
+          echo "Checking for required icons..."
+          for size in 16 32 64 128; do
+            icon="assets/generated_icons/icon_${size}x${size}.png"
+            if [ ! -f "$icon" ]; then
+              echo "ERROR: Missing icon: $icon"
+              exit 1
+            fi
+            echo "✓ Found: $icon"
+          done
+
+          echo "Checking core files..."
+          required_files="requirements.txt uninstall.sh fogstripper-launcher.sh com.github.FogStripper.yml"
+          for file in $required_files; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Missing file: $file"
+              exit 1
+            fi
+            echo "✓ Found: $file"
+          done
+
+          echo "All validations passed!"
+
+  build-deb:
+    name: Build .deb Package
+    runs-on: ubuntu-latest
+    needs: validate
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Generate Icons
+        run: |
+          pip install --quiet Pillow
+          python3 src/utils/icon_resizer.py .
 
       - name: Build Debian Package
         run: |
@@ -19,30 +79,80 @@ jobs:
           echo "Building version $VERSION"
           ./scripts/build_deb.sh "$VERSION"
 
+      - name: Verify Package
+        run: |
+          if [ ! -f fogstripper_*.deb ]; then
+            echo "ERROR: .deb package not found"
+            exit 1
+          fi
+          echo "Package built successfully:"
+          ls -lh fogstripper_*.deb
+
       - name: Upload .deb Package
         uses: actions/upload-artifact@v4
         with:
           name: fogstripper-deb
           path: fogstripper_*.deb
           compression-level: 0
+          retention-days: 30
 
   build-flatpak:
     name: Build Flatpak Bundle
     runs-on: ubuntu-latest
+    needs: validate
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Generate Icons
+        run: |
+          pip install --quiet Pillow
+          python3 src/utils/icon_resizer.py .
 
       - name: Setup Flatpak
         uses: flatpak/flatpak-github-actions/setup-flatpak@v1
 
+      - name: Install Flatpak Dependencies
+        run: |
+          set -e
+          echo "Adding Flathub remote..."
+          flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
+
+          echo "Installing KDE runtime and SDK..."
+          flatpak install --user -y flathub org.kde.Sdk//6.6 org.kde.Platform//6.6
+
+          echo "Verifying installations..."
+          flatpak list --user
+
       - name: Build Flatpak
         run: |
-          flatpak remote-add --if-not-exists --user flathub https://flathub.org/repo/flathub.flatpakrepo
-          flatpak install --user -y flathub org.kde.Sdk//6.6 org.kde.Platform//6.6
-          # Build with network access enabled
-          flatpak-builder --user --share=network --install-deps-from=flathub --force-clean --repo=repo build-dir com.github.FogStripper.yml
-          # Create bundle
+          set -e
+          echo "Building Flatpak with network access..."
+          flatpak-builder \
+            --user \
+            --share=network \
+            --install-deps-from=flathub \
+            --force-clean \
+            --repo=repo \
+            build-dir \
+            com.github.FogStripper.yml
+
+          echo "Creating bundle..."
           flatpak build-bundle repo fogstripper.flatpak com.github.FogStripper
+
+      - name: Verify Bundle
+        run: |
+          if [ ! -f fogstripper.flatpak ]; then
+            echo "ERROR: Flatpak bundle not found"
+            exit 1
+          fi
+          echo "Bundle created successfully:"
+          ls -lh fogstripper.flatpak
 
       - name: Upload Flatpak Bundle
         uses: actions/upload-artifact@v4
@@ -50,6 +160,7 @@ jobs:
           name: fogstripper-flatpak
           path: fogstripper.flatpak
           compression-level: 0
+          retention-days: 30
 
   release:
     name: Create GitHub Release
@@ -72,6 +183,23 @@ jobs:
           name: fogstripper-flatpak
           path: .
 
+      - name: Verify Downloads
+        run: |
+          echo "Verifying downloaded artifacts..."
+          ls -lh
+
+          if [ ! -f fogstripper_*.deb ]; then
+            echo "ERROR: .deb artifact missing"
+            exit 1
+          fi
+
+          if [ ! -f fogstripper.flatpak ]; then
+            echo "ERROR: Flatpak artifact missing"
+            exit 1
+          fi
+
+          echo "All artifacts present!"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -82,3 +210,4 @@ jobs:
           draft: true
           prerelease: false
           generate_release_notes: true
+          fail_on_unmatched_files: true
