@@ -18,7 +18,7 @@ jobs:
           ./scripts/build_deb.sh
 
       - name: Upload .deb Package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: fogstripper-deb
           path: fogstripper_*.deb
@@ -43,7 +43,7 @@ jobs:
           flatpak build-bundle repo fogstripper.flatpak com.github.FogStripper
 
       - name: Upload Flatpak Bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: fogstripper-flatpak
           path: fogstripper.flatpak
