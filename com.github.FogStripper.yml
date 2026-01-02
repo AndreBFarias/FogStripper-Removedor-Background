@@ -19,7 +19,7 @@ modules:
     sources:
       - type: archive
         url: https://potrace.sourceforge.net/download/1.16/potrace-1.16.tar.gz
-        sha256: e40ac0a62423583c44b9a22353101e434b7f590d6e61501c5f3e7f48a97c92a9
+        sha256: be8248a17dedd6ccbaab2fcc45835bb0502d062e40fbded3bc56028ce5eb7acc
 
   # 2. Módulo Python principal que constrói o venv unificado
   - name: fogstripper-python-venv
