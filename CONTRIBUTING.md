@@ -14,10 +14,16 @@ cd FogStripper-Removedor-Background
 source venv/bin/activate
 pip install pre-commit
 pre-commit install
-
-# Rode os testes
-pytest src/tests/ -v
 ```
+
+### Como Começar
+
+1.  Leia a documentação técnica em `docs/`.
+2.  Faça um fork do projeto.
+3.  Crie uma branch para sua feature (`git checkout -b feature/nova-feature`).
+4.  Commit suas mudanças (`git commit -m 'feat: adiciona nova feature'`).
+5.  Push para a branch (`git push origin feature/nova-feature`).
+6.  Abra um Pull Request.
 
 ## Checklist
 
