@@ -11,6 +11,10 @@ finish-args:
   - --device=dri # Acesso à GPU
   - --filesystem=home # Acesso aos arquivos do usuário
 
+build-options:
+  build-args:
+    - --share=network
+
 modules:
   # 1. Dependências do sistema
 
