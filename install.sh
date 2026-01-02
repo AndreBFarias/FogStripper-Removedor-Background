@@ -83,10 +83,10 @@ cat > "$DESKTOP_INSTALL_DIR/fogstripper.desktop" << EOL
 [Desktop Entry]
 Name=FogStripper
 Comment=Removedor de fundo de imagens
-Exec=$PYTHON_EXEC $APP_DIR/src/main.py
+Exec=env PYTHONPATH=$APP_DIR $PYTHON_EXEC $APP_DIR/src/main.py
 Icon=fogstripper
 Type=Application
-Categories=Graphics;Utility;
+Categories=Graphics;
 Terminal=false
 StartupWMClass=$APP_WM_CLASS
 EOL

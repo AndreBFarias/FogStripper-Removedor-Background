@@ -95,7 +95,7 @@ with open(config_path, "w") as f:
 main_script_path = os.path.join(PROJECT_ROOT, "src", "main.py")
 env = os.environ.copy()
 env["FOGSTRIPPER_DEV_MODE"] = "1"
-env["PYTHONPATH"] = os.path.join(PROJECT_ROOT, "src") + os.pathsep + env.get("PYTHONPATH", "")
+env["PYTHONPATH"] = PROJECT_ROOT + os.pathsep + env.get("PYTHONPATH", "")
 
 try:
     print(f">> Invocando a aplicação principal: {main_script_path}", flush=True)
