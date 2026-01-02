@@ -93,29 +93,26 @@ class SettingsPanel(QWidget):
 
     def _setup_upscale_options(self, layout: QVBoxLayout) -> None:
         self.upscale_group = QGroupBox("Upscale (Melhora na Resolucao)")
-        self.upscale_group.setMinimumHeight(90)
+        self.upscale_group.setFixedHeight(70)
         upscale_layout = QHBoxLayout()
-        upscale_layout.setContentsMargins(10, 15, 10, 15)
+        upscale_layout.setContentsMargins(20, 10, 20, 10)
+        upscale_layout.setSpacing(40)
         self.upscale_group.setLayout(upscale_layout)
-
-        upscale_layout.addStretch(1)
 
         self.rb_upscale_off = QRadioButton("Off")
         self.rb_upscale_off.setChecked(True)
         upscale_layout.addWidget(self.rb_upscale_off)
-        upscale_layout.addStretch(1)
 
         self.rb_upscale_2x = QRadioButton("2x")
         upscale_layout.addWidget(self.rb_upscale_2x)
-        upscale_layout.addStretch(1)
 
         self.rb_upscale_3x = QRadioButton("3x")
         upscale_layout.addWidget(self.rb_upscale_3x)
-        upscale_layout.addStretch(1)
 
         self.rb_upscale_4x = QRadioButton("4x")
         upscale_layout.addWidget(self.rb_upscale_4x)
-        upscale_layout.addStretch(1)
+
+        upscale_layout.addStretch()
 
         layout.addWidget(self.upscale_group)
 

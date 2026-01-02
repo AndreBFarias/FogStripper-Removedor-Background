@@ -8,15 +8,16 @@ MODEL_DESCRIPTIONS: dict[str, str] = {
 }
 
 PRESET_COLORS: list[str] = [
-    "#282a36",
-    "#44475a",
+    "#ffffff",
     "#f8f8f2",
-    "#6272a4",
+    "#e0e0e0",
+    "#44475a",
+    "#282a36",
     "#8be9fd",
     "#50fa7b",
     "#ffb86c",
-    "#ff79c6",
     "#bd93f9",
+    "#ff79c6",
     "#ff5555",
     "#f1fa8c",
 ]
