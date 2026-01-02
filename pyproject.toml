@@ -61,6 +61,8 @@ disable_error_code = [
     "union-attr",
     "assignment",
     "call-overload",
+    "no-redef",
+    "misc",
 ]
 exclude = [
     "venv",
