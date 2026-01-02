@@ -25,39 +25,36 @@ modules:
   - name: fogstripper-python-venv
     buildsystem: simple
     build-commands:
-      # Caminho de instalação dentro do sandbox do Flatpak
-      - INSTALL_PREFIX=/app
-
       # --- Criação e Instalação do Venv Unificado ---
-      - python3 -m venv $INSTALL_PREFIX/venv
-      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+      - python3 -m venv /app/venv
+      - /app/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
 
       # Instalação do PyTorch CPU (Flatpak geralmente não tem acesso fácil ao CUDA host environment, vamos de CPU safe)
-      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==1.13.1 torchvision==0.14.1
+      - /app/venv/bin/pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cpu torch==1.13.1 torchvision==0.14.1
 
       # Instalação das dependências gerais
-      - $INSTALL_PREFIX/venv/bin/pip install --no-cache-dir -r requirements.txt
+      - /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
       # --- Copiando os arquivos da aplicação ---
-      - mkdir -p $INSTALL_PREFIX/bin
-      - mkdir -p $INSTALL_PREFIX/src
-      - cp -r src/* $INSTALL_PREFIX/src/
-      - cp -r assets $INSTALL_PREFIX/assets
+      - mkdir -p /app/bin
+      - mkdir -p /app/src
+      - cp -r src/* /app/src/
+      - cp -r assets /app/assets
 
       # Launcher script
-      - cp fogstripper-launcher.sh $INSTALL_PREFIX/bin/
-      - chmod +x $INSTALL_PREFIX/bin/fogstripper-launcher.sh
+      - cp fogstripper-launcher.sh /app/bin/
+      - chmod +x /app/bin/fogstripper-launcher.sh
 
       # --- Gerando o config.json para o ambiente Flatpak ---
       - |
-        cat > "$INSTALL_PREFIX/src/config.json" << EOL
+        cat > "/app/src/config.json" << EOL
         {
-            "PYTHON_REMBG": "$INSTALL_PREFIX/venv/bin/python3",
-            "PYTHON_UPSCALE": "$INSTALL_PREFIX/venv/bin/python3",
-            "REMBG_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_rembg.py",
-            "UPSCALE_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_upscale.py",
-            "EFFECTS_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_effects.py",
-            "BACKGROUND_SCRIPT": "$INSTALL_PREFIX/src/workers/worker_background.py"
+            "PYTHON_REMBG": "/app/venv/bin/python3",
+            "PYTHON_UPSCALE": "/app/venv/bin/python3",
+            "REMBG_SCRIPT": "/app/src/workers/worker_rembg.py",
+            "UPSCALE_SCRIPT": "/app/src/workers/worker_upscale.py",
+            "EFFECTS_SCRIPT": "/app/src/workers/worker_effects.py",
+            "BACKGROUND_SCRIPT": "/app/src/workers/worker_background.py"
         }
         EOL
     sources:
