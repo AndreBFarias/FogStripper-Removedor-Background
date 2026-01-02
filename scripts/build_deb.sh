@@ -34,7 +34,7 @@ Maintainer: FogStripper Team <noreply@fogstripper.dev>
 Depends: python3, python3-pip, python3-venv, git, wget
 Section: graphics
 Priority: optional
-Description: FogStripper - Removedor de Fundo com IA
+Description: FogStripper - Removedor de Fundo
  Aplicacao desktop para remover fundos de imagens e videos
  usando redes neurais (rembg) e realizar upscale (Real-ESRGAN).
 EOL

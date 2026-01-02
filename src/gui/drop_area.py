@@ -28,12 +28,12 @@ class DropArea(QFrame):
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             #DropArea {
-                border: 2px dashed #555;
+                border: 2px dashed #6272a4;
                 border-radius: 10px;
                 background: #2a2a2a;
             }
             #DropArea:hover {
-                border-color: #777;
+                border-color: #bd93f9;
                 background: #333;
             }
         """)

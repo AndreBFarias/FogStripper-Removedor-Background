@@ -23,7 +23,7 @@ Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove 
 
 ### Funcionalidades
 
--   **Arsenal de IAs para Remoção de Fundo:** Escolha entre múltiplos modelos de `rembg` para cada tipo de tarefa, do mais rápido ao mais preciso:
+-   **Arsenal de Modelos para Remoção de Fundo:** Escolha entre múltiplos modelos de `rembg` para cada tipo de tarefa, do mais rápido ao mais preciso:
     -   `u2net` / `u2netp`: Equilíbrio ideal para uso geral e performance.
     -   `u2net_human_seg`: Especializado em recorte de alta precisão de figuras humanas.
     -   `isnet-general-use`: Modelo moderno para a melhor acurácia em objetos complexos.
@@ -49,7 +49,7 @@ Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove 
 
 -   **Interface Intuitiva:** Arraste e solte seus arquivos, com feedback claro durante o processo e diálogos informativos de erro.
 
--   **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem que as complexas dependências de IA entrem em conflito.
+-   **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem que as complexas dependências de ML entrem em conflito.
 
 
 ### A Arquitetura
@@ -60,7 +60,7 @@ O FogStripper tem três módulos principais. A estabilidade foi alcançada ao re
 2.  **Remoção da Névoa (`venv_rembg`):** Módulo isolado para `rembg`, que depende de um ecossistema específico de bibliotecas.
 3.  **Reino da Ampliação (`venv_upscale`):** Um universo congelado no tempo para `realesrgan` e suas versões precisas de `torch` e `numpy`, imune às quebras de compatibilidade do futuro.
 
-Esta separação, forçada pelo script `install.sh`, é a razão pela qual o FogStripper funciona de forma consistente.
+Esta separação, forçada pelo script `install.sh`, é a razão pela qual o FogStripper funciona de forma consistentemente.
 
 ### Instalação
 
