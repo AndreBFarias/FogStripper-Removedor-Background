@@ -25,7 +25,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcairo2-dev libgl1-mesa-glx libxkbcommon-x11-0 libxcb-xinerama0 libegl1
+          sudo apt-get install -y libcairo2-dev libgl1 libxkbcommon-x11-0 libxcb-xinerama0 libegl1
 
       - name: Install Dependencies
         run: |
@@ -60,7 +60,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcairo2-dev libgl1-mesa-glx libxkbcommon-x11-0 libxcb-xinerama0 libegl1
+          sudo apt-get install -y libcairo2-dev libgl1 libxkbcommon-x11-0 libxcb-xinerama0 libegl1
 
       - name: Install Python dependencies
         run: |
@@ -112,7 +112,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libcairo2-dev libgl1-mesa-glx libxkbcommon-x11-0 libxcb-xinerama0 libegl1
+          sudo apt-get install -y libcairo2-dev libgl1 libxkbcommon-x11-0 libxcb-xinerama0 libegl1
 
       - name: Install dependencies
         run: |
