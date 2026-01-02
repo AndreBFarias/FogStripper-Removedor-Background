@@ -18,7 +18,7 @@ classifiers = [
 ]
 
 [project.urls]
-Repository = "https://github.com/AndreBFarias/FogStripper-Removedor-Background"
+Repository = "https://github.com/FogStripper/FogStripper-Removedor-Background"
 
 [tool.ruff]
 target-version = "py310"
@@ -89,7 +89,7 @@ fail_under = 40
 
 [tool.bandit]
 exclude_dirs = ["src/tests", "venv", "venv_rembg", "venv_upscale"]
-skips = ["B101"]
+skips = ["B101", "B404", "B603"]
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]

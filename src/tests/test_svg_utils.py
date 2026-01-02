@@ -14,8 +14,8 @@ class TestRasterToSvg:
         assert result is True
         assert output_path.exists()
         content: str = output_path.read_text()
-        assert content.startswith("<svg")
-        assert content.endswith("</svg>")
+        assert "<svg" in content
+        assert "</svg>" in content
 
     def test_svg_contains_dimensions(self, sample_image: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.svg"

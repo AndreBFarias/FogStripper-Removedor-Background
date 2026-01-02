@@ -53,3 +53,12 @@ dummy_*.png
 dummy_*.svg
 test_venv/
 Luna-main/
+
+# --- Configuracoes de ferramentas externas ---
+.claude/
+Claude-templates/
+docs/
+mkdocs.yml
+Dev_log/
+IMPORTANT.MD
+CLAUDE.md

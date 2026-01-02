@@ -7,7 +7,6 @@ O formato segue [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 ## [1.0.0] - 2025-12-31
 
 ### Adicionado
-- Reorganizacao completa do projeto seguindo padrao CLAUDE.md
 - pyproject.toml com configuracao ruff e mypy
 - Estrutura src/core/, src/gui/, src/utils/, src/tests/
 - dev-journey/ para documentacao de desenvolvimento

@@ -1,6 +1,7 @@
-from PIL import Image
 import os
 import sys
+
+from PIL import Image
 
 
 def resize_icon(source_path, output_dir, sizes):

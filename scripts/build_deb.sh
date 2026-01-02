@@ -30,7 +30,7 @@ cat > "$BUILD_DIR/DEBIAN/control" << EOL
 Package: $PACKAGE_NAME
 Version: $VERSION
 Architecture: $ARCH
-Maintainer: Andre Farias <andrefarias@example.com>
+Maintainer: FogStripper Team <noreply@fogstripper.dev>
 Depends: python3, python3-pip, python3-venv, git, wget
 Section: graphics
 Priority: optional

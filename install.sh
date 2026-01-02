@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP_WM_CLASS="FogStripper"
+APP_WM_CLASS="fogstripper"
 
 echo "============================================================"
 echo "  FOGSTRIPPER - INSTALACAO SIMPLIFICADA"

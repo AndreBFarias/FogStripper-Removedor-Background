@@ -1,60 +1,95 @@
-# FogStripper - Removedor de Fundo 🌫️
+<div align="center">
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![opensource](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](#)
+[![licença](https://img.shields.io/badge/licença-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
+[![Estrelas](https://img.shields.io/github/stars/AndreBFarias/FogStripper.svg?style=social)](https://github.com/AndreBFarias/FogStripper/stargazers)
+[![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
+---
 
-FogStripper é uma aplicação desktop robusta para remover fundos de imagens e vídeos usando IA, com suporte a upscale e efeitos visuais.
+<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="120" alt="Screenshot do FogStripper">
 
-## 🚀 Funcionalidades
+<h1 style="font-size: 2em;">FogStripper</h1>
 
-- **Remoção de Fundo**: Utiliza `rembg` (u2net, isnet, etc.) para recortes precisos.
-- **Upscale IA**: Aumenta a resolução com Real-ESRGAN (2x, 4x).
-- **Processamento em Lote**: Arraste múltiplas imagens ou pastas.
-- **Animações e Vídeos**: Suporte a GIF, MP4, WEBM (experimental).
-- **Efeitos**: Sombras, bordas suaves e substituição de fundo.
-- **Interface Moderna**: GUI em PyQt6 com tema escuro e responsivo.
+</div>
 
-## 📂 Estrutura do Projeto
+---
 
+Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove fundos de imagens e vídeos usando modelos de redes neurais que rodam localmente, com uma arquitetura modularizada que permite estabilidade e evita problemas de conflitos.
+
+---
+
+<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
+
+### Funcionalidades
+
+-   **Arsenal de IAs para Remoção de Fundo:** Escolha entre múltiplos modelos de `rembg` para cada tipo de tarefa, do mais rápido ao mais preciso:
+    -   `u2net` / `u2netp`: Equilíbrio ideal para uso geral e performance.
+    -   `u2net_human_seg`: Especializado em recorte de alta precisão de figuras humanas.
+    -   `isnet-general-use`: Modelo moderno para a melhor acurácia em objetos complexos.
+
+-   **Upscaling de Alta Fidelidade (Real-ESRGAN):** Amplie a resolução das suas imagens, com opções de escala em **2x, 3x e 4x**, ou desative para máxima velocidade.
+
+-   **Módulo de Pós-Processamento Integrado:** Dê o acabamento final diretamente na aplicação com um conjunto de ferramentas criativas:
+    -   **Composição de Fundo:** Substitua a transparência por uma **cor sólida** ou uma **imagem personalizada**.
+    -   **Projeção de Sombra:** Adicione um efeito de **sombra projetada** sutil, com controle de desfoque e opacidade para um resultado mais natural.
+    -   **Recorte Inteligente (Trim):** Opção para ajustar e recortar a imagem, removendo o excesso de área transparente ao redor do objeto.
+    -   **Preenchimento de Buracos:** Opção para preencher buracos internos no objeto detectado.
+    -   **Limpeza de Ruído:** Lógica avançada para remover artefatos e reflexos indesejados (Morphological Opening).
+
+-   **Suporte Avançado a Animações:** Processe `GIFs` e `WEBMs` com a mesma precisão. O FogStripper trata cada quadro individualmente e oferece duas saídas:
+    -   Recompila a animação com o fundo removido.
+    -   Extrai todos os quadros processados como uma sequência de imagens estáticas (`.png`, `.svg`, etc.).
+
+-   **Controle Fino de Recursos:**
+    -   **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
+    -   **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
+
+-   **Exportação Flexível:** Salve seus resultados nos formatos `PNG`, `WEBP`, `SVG` (vetor real multicolorido!) ou `GIF`.
+
+-   **Interface Intuitiva:** Arraste e solte seus arquivos, com feedback claro durante o processo e diálogos informativos de erro.
+
+-   **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem que as complexas dependências de IA entrem em conflito.
+
+
+### A Arquitetura
+
+O FogStripper tem três módulos principais. A estabilidade foi alcançada ao reconhecer que as bibliotecas de redes neurais modernas.
+
+1.  **Interface (`venv_gui`):** Onde a alma da aplicação (PyQt6) reside. Leve e ágil.
+2.  **Remoção da Névoa (`venv_rembg`):** Módulo isolado para `rembg`, que depende de um ecossistema específico de bibliotecas.
+3.  **Reino da Ampliação (`venv_upscale`):** Um universo congelado no tempo para `realesrgan` e suas versões precisas de `torch` e `numpy`, imune às quebras de compatibilidade do futuro.
+
+Esta separação, forçada pelo script `install.sh`, é a razão pela qual o FogStripper funciona de forma consistente.
+
+### Instalação
+
+O script de instalação automatiza a criação de todos os reinos e dependências. Requer uma conexão com a internet.
+
+
+```bash
+# Clone este repositório
+git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
+cd FogStripper-Removedor-Background
+
+# Torne o instalador executável e execute-o
+chmod +x install.sh
+./install.sh
 ```
-FogStripper/
-├── src/
-│   ├── core/           # Núcleo (logger, processamento, config)
-│   ├── gui/            # Interface gráfica (PyQt6)
-│   ├── workers/        # Scripts de IA (Rembg, Upscale)
-│   ├── utils/          # Utilitários (ícones, svg)
-│   └── main.py         # Ponto de entrada
-├── scripts/
-│   ├── qa/             # Scripts de qualidade (hooks git)
-│   └── install_hooks.sh
-├── dev-journey/        # Documentação do projeto (Status, Debt)
-├── requirements.txt    # Dependências unificadas
-├── dev_run.py          # Script de desenvolvimento
-└── README.md
-```
 
-## 🛠️ Instalação e Uso
+### Dependências do Projeto
 
-1.  **Pré-requisitos**: Python 3.10+ e Drivers NVIDIA (opcional, para GPU).
-2.  **Instalação**:
-    ```bash
-    git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
-    cd FogStripper-Removedor-Background
-    pip install -r requirements.txt
-    ```
-3.  **Executar (Modo Dev)**:
-    ```bash
-    python3 dev_run.py
-    ```
+As dependências do Python estão listadas no arquivo `requirements.txt` e são gerenciadas automaticamente pelo script de instalação.
+- **PyQt6** : Para a interface gráfica.
 
-## 🤝 Contribuindo
+- **rembg[gpu]** :  Para a remoção de fundo com aceleração de GPU.
 
-Consulte `CONTRIBUTING.md` para diretrizes de código. O projeto utiliza `pre-commit` para garantir qualidade.
+- **Pillow** : Para a manipulação de imagens.
 
-1.  Instale os hooks: `./scripts/install_hooks.sh`
-2.  Siga o padrão de commits.
+### Uso
+- Arraste e solte imagens na janela ou clique em "Selecione Imagens".
+- Ajuste a potência da GPU com o slider, sentindo o controle pulsar.
+- A imagem processada surge com o sufixo _despido.png, e uma mensagem te guia até a pasta de saída.
 
-## 📄 Licença
-
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+### Licença GLP
+Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.

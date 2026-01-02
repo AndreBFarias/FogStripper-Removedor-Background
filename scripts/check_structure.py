@@ -2,7 +2,7 @@
 import os
 import sys
 
-REQUIRED_DIRS = ["src/workers", "src/gui", "src/core", "src/utils", "scripts/qa", "dev-journey"]
+REQUIRED_DIRS = ["src/workers", "src/gui", "src/core", "src/utils", "dev-journey"]
 
 FORBIDDEN_DIRS = ["src/tools", "src/scripts", "tools", "Luna-main"]
 

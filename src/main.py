@@ -1,18 +1,20 @@
-import sys
 import logging
-import traceback
-import shutil
 import os
-from src.core.logger_config import setup_logging, get_log_path
+import shutil
+import sys
+import traceback
+
+from src.core.logger_config import get_log_path, setup_logging
 
 setup_logging()
 
 try:
-    from PyQt6.QtWidgets import QApplication, QMessageBox, QFileDialog
+    from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
     QApplication.setApplicationName("FogStripper")
-    from src.gui.main_window import FogStripperWindow
     import qdarkstyle
+
+    from src.gui.main_window import FogStripperWindow
 except ImportError as e:
     logging.critical(f"Falha ao importar dependências críticas da GUI: {e}")
 
@@ -60,6 +62,8 @@ sys.excepthook = handle_exception
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    app.setApplicationName("FogStripper")
+    app.setDesktopFileName("fogstripper")
     base_style = qdarkstyle.load_stylesheet()
     combo_fix = """
         QComboBox QAbstractItemView::item {

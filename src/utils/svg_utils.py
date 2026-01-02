@@ -6,6 +6,12 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def raster_to_svg(input_path: str, output_path: str, num_colors: int = 16) -> bool:
+    import os
+
+    if not os.path.exists(input_path):
+        logger.error(f"Arquivo de entrada nao encontrado: {input_path}")
+        return False
+
     try:
         vtracer.convert_image_to_svg_py(
             input_path,
@@ -25,6 +31,6 @@ def raster_to_svg(input_path: str, output_path: str, num_colors: int = 16) -> bo
         logger.info(f"SVG vetorizado gerado em {output_path}")
         return True
 
-    except Exception as e:
+    except BaseException as e:
         logger.error(f"Falha ao gerar SVG: {e}")
         return False

@@ -375,7 +375,6 @@ tests/
 
 ---
 
-## 10. Conformidade com CLAUDE.md
 
 | Requisito | Esperado | Atual | Status |
 |-----------|----------|-------|--------|

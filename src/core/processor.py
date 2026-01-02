@@ -7,13 +7,14 @@ import tempfile
 from typing import Any
 
 import imageio.v2 as imageio
-import imageio_ffmpeg
 import numpy as np
 from PIL import Image
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from src.core.config_loader import PATHS
+from src.core.constants import VIDEO_EXTENSIONS
 from src.utils import svg_utils
+from src.utils.image_processing import fill_internal_holes, remove_external_noise, trim_to_content
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -40,20 +41,7 @@ class ProcessThread(QThread):
         self.tile_size: int = tile_size
         self.post_processing_opts: dict[str, Any] = post_processing_opts
         self.temp_dir: str = tempfile.mkdtemp(prefix="fogstripper_")
-        self.video_extensions: tuple[str, ...] = (
-            ".mp4",
-            ".mov",
-            ".avi",
-            ".wmv",
-            ".mkv",
-            ".avchd",
-            ".flv",
-            ".webm",
-            ".m4v",
-            ".divx",
-            ".gif",
-        )
-        self.is_animated: bool = self.input_path.lower().endswith(self.video_extensions)
+        self.is_animated: bool = self.input_path.lower().endswith(VIDEO_EXTENSIONS)
 
     def run_command(self, command: list[str | None]) -> bool:
         cmd: list[str] = [c for c in command if c is not None]
@@ -61,24 +49,24 @@ class ProcessThread(QThread):
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, check=True, encoding="utf-8")
             if result.stdout:
-                logger.info(f"Saída do worker: {result.stdout.strip()}")
+                logger.info(f"Saida do worker: {result.stdout.strip()}")
             if result.stderr:
                 logger.warning(f"Avisos do worker: {result.stderr.strip()}")
             return True
         except subprocess.CalledProcessError as e:
-            logger.error(f"Worker falhou com código de saída {e.returncode}.")
+            logger.error(f"Worker falhou com codigo {e.returncode}.")
             if e.stdout:
-                logger.error(f"--- Saída Padrão (stdout) do Worker ---:\n{e.stdout.strip()}")
+                logger.error(f"stdout: {e.stdout.strip()}")
             if e.stderr:
-                logger.error(f"--- Saída de Erro (stderr) do Worker ---:\n{e.stderr.strip()}")
+                logger.error(f"stderr: {e.stderr.strip()}")
             return False
         except FileNotFoundError as e:
-            logger.error(f"Comando não encontrado: {e}")
+            logger.error(f"Comando nao encontrado: {e}")
             return False
 
     def cleanup(self) -> None:
         shutil.rmtree(self.temp_dir, ignore_errors=True)
-        logger.info(f"Diretório temporário {self.temp_dir} limpo.")
+        logger.info(f"Diretorio temporario {self.temp_dir} limpo.")
 
     def run(self) -> None:
         final_path: str = ""
@@ -96,297 +84,187 @@ class ProcessThread(QThread):
             if input_is_original:
                 original_backup_path = f"{clean_base}.bak{os.path.splitext(self.input_path)[1]}"
                 shutil.move(self.input_path, original_backup_path)
-                logger.info(f"Backup do arquivo original criado em: {original_backup_path}")
+                logger.info(f"Backup criado: {original_backup_path}")
                 processing_file: str = original_backup_path
             else:
                 processing_file = self.input_path
 
             if self.is_animated:
-                final_path = self.process_animation(processing_file, final_output_path)
+                final_path = self._process_animation(processing_file, final_output_path)
             else:
-                final_path = self.process_static_image(processing_file, final_output_path)
+                final_path = self._process_static_image(processing_file, final_output_path)
 
             if final_path and (os.path.exists(final_path) or os.path.isdir(final_path)):
                 self.finished.emit(final_path)
             else:
-                raise RuntimeError("O artefato final (arquivo ou diretório) não foi gerado.")
+                raise RuntimeError("Artefato final nao gerado.")
 
         except Exception as e:
             logger.error(f"Erro no orquestrador: {e}", exc_info=True)
             if original_backup_path and os.path.exists(original_backup_path):
                 shutil.move(original_backup_path, self.input_path)
-                logger.warning(f"Erro detectado. Backup restaurado para: {self.input_path}")
+                logger.warning(f"Backup restaurado: {self.input_path}")
             self.error.emit(str(e))
         finally:
             self.cleanup()
 
-    def process_static_image(self, current_path: str, final_output_path: str) -> str:
-        step_input_path: str = current_path
-
-        self.progress.emit(10)
-        rembg_output: str = os.path.join(self.temp_dir, "1_rembg_processed.png")
-        rembg_cmd: list[str | None] = [
+    def _run_rembg(self, input_path: str, output_path: str) -> bool:
+        cmd: list[str | None] = [
             PATHS.get("PYTHON_REMBG"),
             PATHS.get("REMBG_SCRIPT"),
             "--input",
-            step_input_path,
+            input_path,
             "--output",
-            rembg_output,
+            output_path,
             "--model",
             self.model_name,
             "--potencia",
             str(self.potencia),
         ]
-        if not self.run_command(rembg_cmd):
+        return self.run_command(cmd)
+
+    def _run_upscale(self, input_path: str, output_path: str, factor: int) -> bool:
+        cmd: list[str | None] = [
+            PATHS.get("PYTHON_UPSCALE"),
+            PATHS.get("UPSCALE_SCRIPT"),
+            "--input",
+            input_path,
+            "--output",
+            output_path,
+            "--tile",
+            str(self.tile_size),
+            "--outscale",
+            str(factor),
+        ]
+        return self.run_command(cmd)
+
+    def _run_effects(self, input_path: str, output_path: str) -> bool:
+        cmd: list[str | None] = [
+            PATHS.get("PYTHON_REMBG"),
+            PATHS.get("EFFECTS_SCRIPT"),
+            "--input",
+            input_path,
+            "--output",
+            output_path,
+        ]
+        return self.run_command(cmd)
+
+    def _run_background(self, input_path: str, output_path: str) -> bool:
+        cmd: list[str | None] = [
+            PATHS.get("PYTHON_REMBG"),
+            PATHS.get("BACKGROUND_SCRIPT"),
+            "--input",
+            input_path,
+            "--output",
+            output_path,
+            "--bg-type",
+            self.post_processing_opts.get("background_type"),
+            "--bg-data",
+            self.post_processing_opts.get("background_data"),
+            "--resize-mode",
+            self.post_processing_opts.get("background_resize_mode"),
+        ]
+        return self.run_command(cmd)
+
+    def _process_static_image(self, current_path: str, final_output_path: str) -> str:
+        step_path: str = current_path
+
+        self.progress.emit(10)
+        rembg_output: str = os.path.join(self.temp_dir, "1_rembg.png")
+        if not self._run_rembg(step_path, rembg_output):
             raise RuntimeError("Falha na remocao de fundo.")
-        step_input_path = rembg_output
+        step_path = rembg_output
         self.progress.emit(30)
 
         if self.post_processing_opts.get("fill_holes"):
-            try:
-                import cv2
-
-                img = cv2.imread(step_input_path, cv2.IMREAD_UNCHANGED)
-                if img is None:
-                    raise ValueError("Erro ao ler imagem para fill holes")
-
-                if img.shape[2] == 4:
-                    alpha = img[:, :, 3]
-                else:
-                    alpha = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
-
-                contours, _ = cv2.findContours(alpha, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                filled_mask = np.zeros_like(alpha)
-                cv2.drawContours(filled_mask, contours, -1, 255, -1)
-
-                original_img = cv2.imread(current_path, cv2.IMREAD_UNCHANGED)
-                if original_img is None:
-                    raise ValueError("Erro ao ler imagem original para fill holes")
-
-                if original_img.shape[:2] != img.shape[:2]:
-                    original_img = cv2.resize(original_img, (img.shape[1], img.shape[0]))
-
-                if original_img.shape[2] == 3:
-                    original_img = cv2.cvtColor(original_img, cv2.COLOR_BGR2BGRA)
-
-                holes_mask = (filled_mask > 0) & (alpha < 10)
-                img[holes_mask] = original_img[holes_mask]
-                cv2.imwrite(step_input_path, img)
-                logger.info("Buracos internos preenchidos com sucesso.")
-
-            except Exception as e:
-                logger.error(f"Falha ao preencher buracos: {e}")
+            fill_internal_holes(step_path, current_path)
         else:
-            try:
-                import cv2
-
-                img = cv2.imread(step_input_path, cv2.IMREAD_UNCHANGED)
-                if img is None:
-                    raise ValueError("Erro ao ler imagem para limpeza de ruído")
-
-                if img.shape[2] == 4:
-                    alpha = img[:, :, 3]
-                    contours, _ = cv2.findContours(alpha, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-                    if contours:
-                        _, binary = cv2.threshold(alpha, 10, 255, cv2.THRESH_BINARY)
-                        kernel = np.ones((5, 5), np.uint8)
-                        opened = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-                        opened_contours, _ = cv2.findContours(opened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-                        if opened_contours:
-                            largest_opened_contour = max(opened_contours, key=cv2.contourArea)
-                            main_object_mask = np.zeros_like(alpha)
-                            cv2.drawContours(main_object_mask, [largest_opened_contour], -1, 255, -1)
-                            dilate_kernel = np.ones((7, 7), np.uint8)
-                            main_object_mask = cv2.dilate(main_object_mask, dilate_kernel, iterations=1)
-                            new_alpha = cv2.bitwise_and(alpha, main_object_mask)
-                            img[:, :, 3] = new_alpha
-                            cv2.imwrite(step_input_path, img)
-                            logger.info("Ruídos externos removidos com Morphological Opening.")
-                        else:
-                            largest_contour = max(contours, key=cv2.contourArea)
-                            mask = np.zeros_like(alpha)
-                            cv2.drawContours(mask, [largest_contour], -1, 255, -1)
-                            new_alpha = cv2.bitwise_and(alpha, mask)
-                            img[:, :, 3] = new_alpha
-                            cv2.imwrite(step_input_path, img)
-                            logger.info("Ruídos externos removidos (fallback padrão).")
-
-            except Exception as e:
-                logger.error(f"Falha ao limpar ruídos externos: {e}")
+            remove_external_noise(step_path)
 
         if self.post_processing_opts.get("crop_option") == "trim":
-            try:
-                with Image.open(step_input_path) as img:
-                    img = img.convert("RGBA")
-                    data = np.array(img)
-                    alpha = data[:, :, 3]
-
-                    rows = np.any(alpha > 15, axis=1)
-                    cols = np.any(alpha > 15, axis=0)
-
-                    if rows.any() and cols.any():
-                        ymin, ymax = np.where(rows)[0][[0, -1]]
-                        xmin, xmax = np.where(cols)[0][[0, -1]]
-
-                        margin: int = 0
-                        ymin = max(0, ymin - margin)
-                        ymax = min(img.height, ymax + 1 + margin)
-                        xmin = max(0, xmin - margin)
-                        xmax = min(img.width, xmax + 1 + margin)
-
-                        cropped_img = img.crop((xmin, ymin, xmax, ymax))
-                        cropped_img.save(step_input_path)
-                        logger.info(f"Imagem recortada (Trim) com sucesso. Novo tamanho: {cropped_img.size}")
-                    else:
-                        logger.warning("Imagem vazia ou totalmente transparente após threshold.")
-            except Exception as e:
-                logger.error(f"Falha ao recortar imagem: {e}")
+            trim_to_content(step_path)
 
         upscale_factor: int = self.post_processing_opts.get("upscale_factor", 0)
         if upscale_factor > 0:
             upscale_output: str = os.path.join(self.temp_dir, "2_upscaled.png")
-            upscale_cmd: list[str | None] = [
-                PATHS.get("PYTHON_UPSCALE"),
-                PATHS.get("UPSCALE_SCRIPT"),
-                "--input",
-                step_input_path,
-                "--output",
-                upscale_output,
-                "--tile",
-                str(self.tile_size),
-                "--outscale",
-                str(upscale_factor),
-            ]
-            if not self.run_command(upscale_cmd):
+            if not self._run_upscale(step_path, upscale_output, upscale_factor):
                 raise RuntimeError("Falha no upscale.")
-            step_input_path = upscale_output
+            step_path = upscale_output
         self.progress.emit(50)
 
         if self.post_processing_opts.get("enabled"):
             if self.post_processing_opts.get("shadow_enabled"):
-                shadow_output: str = os.path.join(self.temp_dir, "3_shadow_effect.png")
-                effects_cmd: list[str | None] = [
-                    PATHS.get("PYTHON_REMBG"),
-                    PATHS.get("EFFECTS_SCRIPT"),
-                    "--input",
-                    step_input_path,
-                    "--output",
-                    shadow_output,
-                ]
-                if not self.run_command(effects_cmd):
+                shadow_output: str = os.path.join(self.temp_dir, "3_shadow.png")
+                if not self._run_effects(step_path, shadow_output):
                     raise RuntimeError("Falha ao aplicar sombra.")
-                step_input_path = shadow_output
+                step_path = shadow_output
             self.progress.emit(70)
 
-            bg_type: str | None = self.post_processing_opts.get("background_type")
-            bg_data: str | None = self.post_processing_opts.get("background_data")
+            bg_type = self.post_processing_opts.get("background_type")
+            bg_data = self.post_processing_opts.get("background_data")
             if bg_type and bg_data:
-                background_output: str = os.path.join(self.temp_dir, f"4_background{self.output_format}")
-                background_cmd: list[str | None] = [
-                    PATHS.get("PYTHON_REMBG"),
-                    PATHS.get("BACKGROUND_SCRIPT"),
-                    "--input",
-                    step_input_path,
-                    "--output",
-                    background_output,
-                    "--bg-type",
-                    bg_type,
-                    "--bg-data",
-                    bg_data,
-                    "--resize-mode",
-                    self.post_processing_opts.get("background_resize_mode"),
-                ]
-                if not self.run_command(background_cmd):
+                bg_output: str = os.path.join(self.temp_dir, f"4_background{self.output_format}")
+                if not self._run_background(step_path, bg_output):
                     raise RuntimeError("Falha ao aplicar fundo.")
-                step_input_path = background_output
+                step_path = bg_output
             self.progress.emit(90)
 
         if self.output_format == ".svg":
-            if svg_utils.raster_to_svg(step_input_path, final_output_path):
+            if svg_utils.raster_to_svg(step_path, final_output_path):
                 self.progress.emit(100)
                 return final_output_path
             else:
-                logger.warning("SVG generation failed, saving as PNG instead.")
+                logger.warning("SVG falhou, salvando como PNG.")
                 final_output_path = os.path.splitext(final_output_path)[0] + ".png"
-                shutil.move(step_input_path, final_output_path)
-        else:
-            shutil.move(step_input_path, final_output_path)
 
+        shutil.move(step_path, final_output_path)
         self.progress.emit(100)
         return final_output_path
 
-    def process_animation(self, current_path: str, final_output_path: str) -> str:
+    def _process_animation(self, current_path: str, final_output_path: str) -> str:
         logger.info("Processando animacao...")
 
         reader = imageio.get_reader(current_path)
         try:
-            meta_data: dict[str, Any] = reader.get_meta_data()
-            fps: float | None = meta_data.get("fps", None)
-            if fps is None:
-                duration: float = meta_data.get("duration", 100) / 1000
-                fps = 1 / duration if duration > 0 else 10
-            frames: list[np.ndarray] = [frame for frame in reader]
+            meta: dict[str, Any] = reader.get_meta_data()
+            fps: float = meta.get("fps") or (1000 / meta.get("duration", 100))
+            frames: list[np.ndarray] = list(reader)
         finally:
             reader.close()
 
         num_frames: int = len(frames)
-        purified_frames: list[Image.Image] = []
+        processed_frames: list[Image.Image] = []
 
         for i, frame in enumerate(frames):
             frame_path: str = os.path.join(self.temp_dir, f"frame_{i:04d}.png")
             Image.fromarray(frame).convert("RGBA").save(frame_path)
 
-            processed_frame_path: str = os.path.join(self.temp_dir, f"processed_frame_{i:04d}.png")
-            rembg_cmd: list[str | None] = [
-                PATHS.get("PYTHON_REMBG"),
-                PATHS.get("REMBG_SCRIPT"),
-                "--input",
-                frame_path,
-                "--output",
-                processed_frame_path,
-                "--model",
-                self.model_name,
-                "--potencia",
-                str(self.potencia),
-            ]
-            if not self.run_command(rembg_cmd):
-                raise RuntimeError(f"Falha ao processar o quadro {i}.")
+            out_path: str = os.path.join(self.temp_dir, f"proc_{i:04d}.png")
+            if not self._run_rembg(frame_path, out_path):
+                raise RuntimeError(f"Falha no quadro {i}.")
 
-            with Image.open(processed_frame_path) as processed_img:
-                processed_img = processed_img.convert("RGBA")
-                purified_canvas: Image.Image = Image.new("RGBA", processed_img.size, (0, 0, 0, 0))
-                purified_canvas.paste(processed_img, (0, 0), processed_img)
-                purified_frames.append(purified_canvas)
+            with Image.open(out_path) as img:
+                canvas = Image.new("RGBA", img.size, (0, 0, 0, 0))
+                canvas.paste(img.convert("RGBA"), (0, 0), img.convert("RGBA"))
+                processed_frames.append(canvas)
 
             self.progress.emit(int((i + 1) / num_frames * 90))
 
         if self.output_format in [".png", ".svg"]:
             output_dir: str = os.path.splitext(final_output_path)[0]
-            logger.info(f"Desmembrando animação em quadros estáticos em: {output_dir}")
             os.makedirs(output_dir, exist_ok=True)
-            for i, p_frame in enumerate(purified_frames):
-                temp_save_path: str = os.path.join(output_dir, f"frame_{i:04d}.png")
-                p_frame.save(temp_save_path)
-
-                final_frame_path: str = os.path.join(output_dir, f"frame_{i:04d}{self.output_format}")
-
-                if temp_save_path != final_frame_path:
-                    shutil.move(temp_save_path, final_frame_path)
-
+            for i, pf in enumerate(processed_frames):
+                pf.save(os.path.join(output_dir, f"frame_{i:04d}{self.output_format}"))
             self.progress.emit(100)
             return output_dir
+
+        np_frames = [np.array(pf) for pf in processed_frames]
+        if final_output_path.lower().endswith(".webm"):
+            imageio.mimsave(
+                final_output_path, np_frames, fps=fps, codec="libvpx-vp9", pixelformat="yuva420p", quality=8
+            )
         else:
-            logger.info(f"Reconstruindo animação em {final_output_path}")
-            np_frames: list[np.ndarray] = [np.array(p_frame) for p_frame in purified_frames]
+            imageio.mimsave(final_output_path, np_frames, fps=fps, loop=0, disposal=2)
 
-            if final_output_path.lower().endswith(".webm"):
-                imageio.mimsave(
-                    final_output_path, np_frames, fps=fps, codec="libvpx-vp9", pixelformat="yuva420p", quality=8
-                )
-            else:
-                imageio.mimsave(final_output_path, np_frames, fps=fps, loop=0, disposal=2)
-
-            self.progress.emit(100)
-            return final_output_path
+        self.progress.emit(100)
+        return final_output_path

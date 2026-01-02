@@ -19,7 +19,7 @@ PATHS: dict[str, Any] = {}
 def load_paths() -> None:
     global PATHS
     try:
-        with open(CONFIG_PATH, "r") as f:
+        with open(CONFIG_PATH) as f:
             PATHS = json.load(f)
         logger.info(f"Configuracao ({os.path.basename(CONFIG_PATH)}) carregada.")
     except FileNotFoundError:

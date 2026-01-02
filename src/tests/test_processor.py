@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from src.core.constants import VIDEO_EXTENSIONS
 from src.core.processor import ProcessThread
 
 
@@ -113,10 +114,10 @@ class TestProcessThread:
         assert result is True
 
     def test_video_extensions_tuple(self, processor: ProcessThread) -> None:
-        assert isinstance(processor.video_extensions, tuple)
-        assert ".gif" in processor.video_extensions
-        assert ".mp4" in processor.video_extensions
-        assert ".mov" in processor.video_extensions
+        assert isinstance(VIDEO_EXTENSIONS, tuple)
+        assert ".gif" in VIDEO_EXTENSIONS
+        assert ".mp4" in VIDEO_EXTENSIONS
+        assert ".mov" in VIDEO_EXTENSIONS
 
     def test_post_processing_opts_stored(self, processor: ProcessThread) -> None:
         assert processor.post_processing_opts["upscale_factor"] == 0
