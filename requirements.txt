@@ -2,6 +2,7 @@
 PyQt6==6.10.0
 PyQt6-Qt6==6.10.0
 PyQt6_sip==13.10.2
+qdarkstyle>=3.0.0
 
 # Core Processing
 rembg[gpu,cli]==2.0.60
@@ -24,8 +25,9 @@ imageio-ffmpeg>=0.4.8
 # Utilities
 requests>=2.28.0
 tqdm>=4.60.0
-svgwrite>=1.4.3  # Assuming needed for SVG utils
-svglib>=1.5.1    # Assuming needed for SVG utils
+svgwrite>=1.4.3
+svglib>=1.5.1
+vtracer>=0.6.0
 
 # Development
 pre-commit>=3.5.0
