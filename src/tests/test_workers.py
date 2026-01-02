@@ -9,7 +9,7 @@ from PIL import Image
 class TestWorkerBackground:
     def test_color_background(self, sample_image_with_transparency: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.png"
-        worker_path: str = str(Path(__file__).parent.parent / "worker_background.py")
+        worker_path: str = str(Path(__file__).parent.parent / "workers" / "worker_background.py")
 
         result = subprocess.run(
             [
@@ -41,7 +41,7 @@ class TestWorkerBackground:
         temp_dir: Path,
     ) -> None:
         output_path: Path = temp_dir / "output.png"
-        worker_path: str = str(Path(__file__).parent.parent / "worker_background.py")
+        worker_path: str = str(Path(__file__).parent.parent / "workers" / "worker_background.py")
 
         result = subprocess.run(
             [
@@ -69,7 +69,7 @@ class TestWorkerBackground:
 class TestWorkerEffects:
     def test_shadow_effect(self, sample_image_with_transparency: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.png"
-        worker_path: str = str(Path(__file__).parent.parent / "worker_effects.py")
+        worker_path: str = str(Path(__file__).parent.parent / "workers" / "worker_effects.py")
 
         result = subprocess.run(
             [
@@ -96,7 +96,7 @@ class TestWorkerRembg:
     @pytest.mark.slow
     def test_background_removal(self, sample_image: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.png"
-        worker_path: str = str(Path(__file__).parent.parent / "worker_rembg.py")
+        worker_path: str = str(Path(__file__).parent.parent / "workers" / "worker_rembg.py")
 
         result = subprocess.run(
             [
@@ -124,7 +124,7 @@ class TestWorkerUpscale:
     @pytest.mark.slow
     def test_upscale(self, sample_image: Path, temp_dir: Path) -> None:
         output_path: Path = temp_dir / "output.png"
-        worker_path: str = str(Path(__file__).parent.parent / "worker_upscale.py")
+        worker_path: str = str(Path(__file__).parent.parent / "workers" / "worker_upscale.py")
 
         result = subprocess.run(
             [

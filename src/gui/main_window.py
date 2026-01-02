@@ -13,21 +13,15 @@ from PyQt6.QtWidgets import (
     QLabel,
     QMessageBox,
     QProgressBar,
-    QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
 from src.core.logger_config import get_log_path
 from src.core.processor import ProcessThread
-from src.gui.constants import (
-    ALL_EXTENSIONS,
-    IMAGE_EXTENSIONS,
-    MODEL_DESCRIPTIONS,
-    VIDEO_EXTENSIONS,
-)
+from src.gui.constants import ALL_EXTENSIONS, VIDEO_EXTENSIONS
 from src.gui.dialogs import ProcessingOptionsDialog, create_styled_message_box
+from src.gui.drop_area import DropArea
 from src.gui.widgets import PostProcessingPanel, SettingsPanel
 
 logger = logging.getLogger(__name__)
@@ -59,9 +53,11 @@ class FogStripperWindow(QWidget):
     def _setup_ui(self) -> None:
         main_layout = QVBoxLayout(self)
         self._setup_header(main_layout)
-        self._setup_preview(main_layout)
 
-        main_layout.addSpacing(20)
+        self.status_label = QLabel()
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.status_label.setVisible(False)
+        main_layout.addWidget(self.status_label)
 
         self.settings_panel = SettingsPanel()
         main_layout.addWidget(self.settings_panel)
@@ -69,7 +65,7 @@ class FogStripperWindow(QWidget):
         self.post_panel = PostProcessingPanel()
         main_layout.addWidget(self.post_panel)
 
-        self._setup_action_button(main_layout)
+        self._setup_drop_area(main_layout)
         self._setup_progress_bar(main_layout)
 
         self.settings_panel.update_model_description(self.settings_panel.model_combo.currentText())
@@ -100,37 +96,14 @@ class FogStripperWindow(QWidget):
 
         layout.addLayout(header_layout)
 
-    def _setup_preview(self, layout: QVBoxLayout) -> None:
-        self.label = QLabel()
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label.setVisible(False)
-        layout.addWidget(self.label)
+    def _setup_drop_area(self, layout: QVBoxLayout) -> None:
+        container = QWidget()
+        container_layout = QHBoxLayout(container)
+        container_layout.setContentsMargins(30, 0, 30, 0)
 
-        self.preview_scroll = QScrollArea()
-        self.preview_scroll.setWidgetResizable(True)
-        self.preview_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.preview_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.preview_scroll.setFixedHeight(90)
-        self.preview_scroll.setVisible(False)
-
-        self.preview_container = QWidget()
-        self.preview_layout = QHBoxLayout(self.preview_container)
-        self.preview_layout.setContentsMargins(5, 5, 5, 5)
-        self.preview_layout.setSpacing(10)
-        self.preview_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.preview_scroll.setWidget(self.preview_container)
-        layout.addWidget(self.preview_scroll)
-
-    def _setup_action_button(self, layout: QVBoxLayout) -> None:
-        btn_container = QWidget()
-        btn_layout = QHBoxLayout(btn_container)
-        btn_layout.setContentsMargins(30, 0, 30, 0)
-
-        self.button = QPushButton("Selecione ou arraste suas imagens aqui!")
-        self.button.setFixedHeight(45)
-        self.button.clicked.connect(self.open_files)
-        btn_layout.addWidget(self.button)
-        layout.addWidget(btn_container)
+        self.drop_area = DropArea(self.start_file_processing)
+        container_layout.addWidget(self.drop_area)
+        layout.addWidget(container)
 
     def _setup_progress_bar(self, layout: QVBoxLayout) -> None:
         self.progress_bar = QProgressBar()
@@ -174,68 +147,12 @@ class FogStripperWindow(QWidget):
         if paths:
             self.start_file_processing(paths)
 
-    def open_files(self) -> None:
-        video_exts = " ".join([f"*{ext}" for ext in VIDEO_EXTENSIONS])
-        image_exts = " ".join([f"*{ext}" for ext in IMAGE_EXTENSIONS])
-        filter_str = f"Imagens e Vídeos ({image_exts} {video_exts})"
-        paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", filter_str)
-        if paths:
-            self.start_file_processing(paths)
-
-    def update_preview(self, paths: list[str]) -> None:
-        while self.preview_layout.count():
-            item = self.preview_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-
-        if not paths:
-            self.preview_scroll.setVisible(False)
-            self.label.setVisible(False)
-            return
-
-        self.label.setText(f"{len(paths)} imagem(ns) selecionada(s)")
-        self.label.setVisible(True)
-        self.preview_scroll.setVisible(True)
-
-        for path in paths[:20]:
-            thumb = QLabel()
-            thumb.setFixedSize(70, 70)
-            thumb.setStyleSheet("border: 1px solid #555; border-radius: 5px;")
-            thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            thumb.setToolTip(os.path.basename(path))
-
-            if path.lower().endswith(IMAGE_EXTENSIONS):
-                pix = QPixmap(path)
-                if not pix.isNull():
-                    thumb.setPixmap(
-                        pix.scaled(
-                            68,
-                            68,
-                            Qt.AspectRatioMode.KeepAspectRatio,
-                            Qt.TransformationMode.SmoothTransformation,
-                        )
-                    )
-                else:
-                    thumb.setText("IMG")
-            else:
-                thumb.setText("VID")
-                thumb.setStyleSheet("border: 1px solid #555; border-radius: 5px; background: #333;")
-
-            self.preview_layout.addWidget(thumb)
-
-        if len(paths) > 20:
-            more = QLabel(f"+{len(paths) - 20}")
-            more.setFixedSize(70, 70)
-            more.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            more.setStyleSheet("color: #888;")
-            self.preview_layout.addWidget(more)
-
     def start_file_processing(self, paths: list[str]) -> None:
         if not paths:
             return
 
         self.files_to_process = paths
-        self.update_preview(paths)
+        self.drop_area.update_preview(paths)
 
         is_animated = any(p.lower().endswith(VIDEO_EXTENSIONS) for p in paths)
         self.settings_panel.upscale_group.setEnabled(not is_animated)
@@ -271,8 +188,10 @@ class FogStripperWindow(QWidget):
             return
 
         path = self.files_to_process[self.current_index]
-        self.label.setText(f"Processando: {os.path.basename(path)} ({self.current_index + 1}/{self.total_files})")
-        self.label.setVisible(True)
+        self.status_label.setText(
+            f"Processando: {os.path.basename(path)} ({self.current_index + 1}/{self.total_files})"
+        )
+        self.status_label.setVisible(True)
 
         post_opts: dict[str, Any] = {
             "enabled": self.post_panel.is_enabled(),
@@ -301,11 +220,11 @@ class FogStripperWindow(QWidget):
         self._process_next()
 
     def _on_all_processed(self) -> None:
-        self.label.setVisible(False)
+        self.status_label.setVisible(False)
         self.progress_bar.setVisible(False)
         self._set_controls_enabled(True)
         self.files_to_process.clear()
-        self.update_preview([])
+        self.drop_area.clear()
 
         msg = create_styled_message_box(self, "Processo Concluído", "Todas as imagens foram processadas.")
         open_folder = msg.addButton("Abrir Pasta", QMessageBox.ButtonRole.ActionRole)
@@ -328,11 +247,12 @@ class FogStripperWindow(QWidget):
             self._copy_to_clipboard(self.last_output_path)
 
     def _on_error(self, error_message: str) -> None:
-        self.label.setText("Ocorreu um erro!")
-        self.label.setVisible(True)
+        self.status_label.setText("Ocorreu um erro!")
+        self.status_label.setVisible(True)
         self.progress_bar.setVisible(False)
         self._set_controls_enabled(True)
         self.files_to_process.clear()
+        self.drop_area.clear()
 
         dialog = create_styled_message_box(
             self,
@@ -365,7 +285,7 @@ class FogStripperWindow(QWidget):
                 logger.error(f"Falha ao salvar o relatório: {e}")
 
     def _set_controls_enabled(self, enabled: bool) -> None:
-        self.button.setEnabled(enabled)
+        self.drop_area.setEnabled(enabled)
         self.settings_panel.setEnabled(enabled)
         self.post_panel.setEnabled(enabled)
         self.setAcceptDrops(enabled)
