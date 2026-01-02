@@ -125,7 +125,9 @@ jobs:
           python3 scripts/optimize_images.py .
 
       - name: Setup Flatpak
-        uses: flatpak/flatpak-github-actions/setup-flatpak@v1
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
 
       - name: Install Flatpak Dependencies
         run: |
