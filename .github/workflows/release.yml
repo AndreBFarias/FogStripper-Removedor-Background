@@ -10,7 +10,7 @@ jobs:
     name: Build .deb Package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build Debian Package
         run: |
@@ -28,7 +28,7 @@ jobs:
     name: Build Flatpak Bundle
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Flatpak
         uses: flatpak/flatpak-github-actions/setup-flatpak@v1
@@ -56,7 +56,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Download .deb
         uses: actions/download-artifact@v4
