@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-VERSION="1.0.0"
+VERSION="${1:-1.0.0}"
 ARCH="amd64"
 PACKAGE_NAME="fogstripper"
 BUILD_DIR="build_deb"
