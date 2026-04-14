@@ -5,6 +5,18 @@ Todas as mudancas notaveis neste projeto serao documentadas aqui.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.2.0] - 2026-04-13
+
+### Adicionado
+- Botões "Processar" e "Limpar" na área de drop, alinhados à direita
+- Seleção de arquivos não inicia mais o processamento automaticamente
+- Drag-and-drop passa pelo mesmo fluxo de seleção que o clique
+
+### Alterado
+- DropArea reestruturada: área de preview expande, botões com largura fixa à direita
+
+---
+
 ## [1.1.0] - 2026-04-13
 
 ### Corrigido

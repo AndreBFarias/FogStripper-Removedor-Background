@@ -47,9 +47,9 @@ class DropArea(QFrame):
 
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(10, 10, 10, 10)
-        main_layout.setSpacing(0)
+        main_layout.setSpacing(8)
 
-        # Área de seleção e preview — 75% da largura
+        # Área de seleção e preview — expande para preencher o espaço disponível
         left_widget = QWidget()
         left_widget.setStyleSheet("background: transparent;")
         left_layout = QVBoxLayout(left_widget)
@@ -77,14 +77,9 @@ class DropArea(QFrame):
         self.scroll_area.setWidget(self.preview_container)
         left_layout.addWidget(self.scroll_area)
 
-        main_layout.addWidget(left_widget, 15)
+        main_layout.addWidget(left_widget, 1)
 
-        # Espaçador — 5% da largura
-        spacer = QWidget()
-        spacer.setStyleSheet("background: transparent;")
-        main_layout.addWidget(spacer, 1)
-
-        # Coluna de botões — 20% da largura
+        # Coluna de botões — largura natural, alinhada à direita
         self._buttons_widget = QWidget()
         self._buttons_widget.setStyleSheet("background: transparent;")
         buttons_layout = QVBoxLayout(self._buttons_widget)
@@ -94,7 +89,7 @@ class DropArea(QFrame):
 
         self.btn_processar = QPushButton("Processar")
         self.btn_processar.setEnabled(False)
-        self.btn_processar.setFixedHeight(28)
+        self.btn_processar.setFixedSize(90, 28)
         self.btn_processar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_processar.setStyleSheet("""
             QPushButton {
@@ -114,7 +109,7 @@ class DropArea(QFrame):
 
         self.btn_limpar = QPushButton("Limpar")
         self.btn_limpar.setEnabled(False)
-        self.btn_limpar.setFixedHeight(28)
+        self.btn_limpar.setFixedSize(90, 28)
         self.btn_limpar.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_limpar.setStyleSheet("""
             QPushButton {
@@ -132,7 +127,7 @@ class DropArea(QFrame):
         self.btn_limpar.clicked.connect(self.clear)
         buttons_layout.addWidget(self.btn_limpar)
 
-        main_layout.addWidget(self._buttons_widget, 4)
+        main_layout.addWidget(self._buttons_widget)
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
