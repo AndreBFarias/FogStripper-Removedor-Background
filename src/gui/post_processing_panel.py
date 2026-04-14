@@ -217,4 +217,6 @@ class PostProcessingPanel(QWidget):
             "background_data": self.background_data,
             "background_resize_mode": self.background_resize_mode,
             "shadow_enabled": self.shadow_enabled,
+            "shadow_blur": self.shadow_blur,
+            "shadow_opacity": self.shadow_opacity,
         }

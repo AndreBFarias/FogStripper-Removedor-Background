@@ -69,3 +69,9 @@ my-mailmap
 Dev_log/
 IMPORTANT.MD
 KIMI.md
+
+# Modelos U2Net (baixados automaticamente, nao versionar)
+models/u2net/
+
+# Sprints concluidas
+SPRINT_*.md

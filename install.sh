@@ -39,8 +39,8 @@ echo ""
 echo "[1/3] Configurando ambiente virtual unificado..."
 # Instalando PyTorch primeiro para garantir binarios
 echo ">> Instalando Core e PyTorch (isso ajuda a evitar compilacao desnecessaria)..."
-"$PYTHON_EXEC" -m pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cu118 || \
-"$PYTHON_EXEC" -m pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+"$PYTHON_EXEC" -m pip install --no-cache-dir "torch==2.0.1" "torchvision==0.15.2" --index-url https://download.pytorch.org/whl/cu118 || \
+"$PYTHON_EXEC" -m pip install --no-cache-dir "torch==2.0.1" "torchvision==0.15.2" --index-url https://download.pytorch.org/whl/cpu
 
 echo ""
 echo "[2/3] Instalando demais dependencias (pode demorar um pouco)..."
@@ -51,7 +51,6 @@ echo ""
 echo "[3/3] Configurando sistema..."
 
 echo ">> Criando arquivo de configuracao..."
-# Agora usamos o MESMO python para tudo, pois unificamos o venv
 cat > "$APP_DIR/config.json" << EOL
 {
     "PYTHON_REMBG": "$PYTHON_EXEC",
@@ -59,7 +58,8 @@ cat > "$APP_DIR/config.json" << EOL
     "REMBG_SCRIPT": "$APP_DIR/src/workers/worker_rembg.py",
     "UPSCALE_SCRIPT": "$APP_DIR/src/workers/worker_upscale.py",
     "EFFECTS_SCRIPT": "$APP_DIR/src/workers/worker_effects.py",
-    "BACKGROUND_SCRIPT": "$APP_DIR/src/workers/worker_background.py"
+    "BACKGROUND_SCRIPT": "$APP_DIR/src/workers/worker_background.py",
+    "U2NET_HOME": "$APP_DIR/models/u2net"
 }
 EOL
 
@@ -69,6 +69,9 @@ mkdir -p "$APP_DIR/src"
 cp -r ./src/* "$APP_DIR/src/"
 cp -r ./assets "$APP_DIR/"
 cp ./uninstall.sh "$APP_DIR/" && chmod +x "$APP_DIR/uninstall.sh"
+
+echo ">> Criando diretorio de modelos..."
+mkdir -p "$APP_DIR/models/u2net"
 
 echo ">> Instalando atalhos..."
 for size in 16 32 64 128; do

@@ -9,14 +9,18 @@ def main() -> None:
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Aplica um efeito de sombra a uma imagem.")
     parser.add_argument("--input", required=True, help="Caminho para a imagem de entrada (com fundo transparente).")
     parser.add_argument("--output", required=True, help="Caminho para salvar a imagem final com a sombra.")
+    parser.add_argument("--blur-radius", type=int, default=15, help="Raio do desfoque da sombra.")
+    parser.add_argument("--offset-x", type=int, default=10, help="Deslocamento horizontal da sombra.")
+    parser.add_argument("--offset-y", type=int, default=10, help="Deslocamento vertical da sombra.")
+    parser.add_argument("--opacity", type=int, default=180, help="Opacidade da sombra (0-255).")
 
     args: Namespace = parser.parse_args()
 
     try:
-        blur_radius: int = 15
-        offset_x: int = 10
-        offset_y: int = 10
-        shadow_color: tuple[int, int, int, int] = (0, 0, 0, 180)
+        blur_radius: int = args.blur_radius
+        offset_x: int = args.offset_x
+        offset_y: int = args.offset_y
+        shadow_color: tuple[int, int, int, int] = (0, 0, 0, max(0, min(255, args.opacity)))
 
         original_img: Image.Image = Image.open(args.input).convert("RGBA")
 

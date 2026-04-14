@@ -1,10 +1,21 @@
 import argparse
 import sys
 import traceback
+import types
 from argparse import Namespace
 
 import numpy as np
 import torch
+
+try:
+    import torchvision.transforms.functional_tensor  # noqa: F401
+except ModuleNotFoundError:
+    import torchvision.transforms.functional as _tvf
+
+    _module = types.ModuleType("torchvision.transforms.functional_tensor")
+    _module.rgb_to_grayscale = _tvf.rgb_to_grayscale
+    sys.modules["torchvision.transforms.functional_tensor"] = _module
+
 from basicsr.archs.rrdbnet_arch import RRDBNet
 from numpy.typing import NDArray
 from PIL import Image
@@ -53,9 +64,9 @@ def main() -> None:
         print(f"Upscale worker concluído para a escala {args.outscale}x.")
     except Exception:
         detailed_error: str = traceback.format_exc()
-        sys.stderr.write("--- CONFISSÃO DO SERVO UPSCALE ---\n")
+        sys.stderr.write("--- ERRO UPSCALE WORKER ---\n")
         sys.stderr.write(detailed_error)
-        sys.stderr.write("--- FIM DA CONFISSÃO ---\n")
+        sys.stderr.write("--- FIM DO ERRO ---\n")
         exit(1)
 
 

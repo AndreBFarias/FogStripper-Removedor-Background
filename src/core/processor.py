@@ -139,6 +139,7 @@ class ProcessThread(QThread):
         return self.run_command(cmd)
 
     def _run_effects(self, input_path: str, output_path: str) -> bool:
+        opacity_0_255: int = int((self.post_processing_opts.get("shadow_opacity", 70) / 100) * 255)
         cmd: list[str | None] = [
             PATHS.get("PYTHON_REMBG"),
             PATHS.get("EFFECTS_SCRIPT"),
@@ -146,6 +147,10 @@ class ProcessThread(QThread):
             input_path,
             "--output",
             output_path,
+            "--blur-radius",
+            str(self.post_processing_opts.get("shadow_blur", 15)),
+            "--opacity",
+            str(opacity_0_255),
         ]
         return self.run_command(cmd)
 

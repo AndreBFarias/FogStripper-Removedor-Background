@@ -1,5 +1,16 @@
 import argparse
+import os
 from argparse import Namespace
+from pathlib import Path
+
+_MODELS_DIR = Path(
+    os.environ.get(
+        "U2NET_HOME",
+        str(Path.home() / ".local" / "share" / "fogstripper" / "models" / "u2net"),
+    )
+)
+os.environ["U2NET_HOME"] = str(_MODELS_DIR)
+_MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 from PIL import Image
 from rembg import new_session, remove

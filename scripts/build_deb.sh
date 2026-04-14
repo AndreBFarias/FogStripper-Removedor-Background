@@ -106,6 +106,8 @@ chmod 755 "$BUILD_DIR/DEBIAN/prerm"
 echo ">> Criando launcher..."
 cat > "$BUILD_DIR/usr/bin/fogstripper" << EOL
 #!/bin/bash
+export PYTHONPATH=/opt/fogstripper
+export U2NET_HOME=/opt/fogstripper/models/u2net
 exec /opt/fogstripper/venv/bin/python3 /opt/fogstripper/src/main.py "\$@"
 EOL
 chmod 755 "$BUILD_DIR/usr/bin/fogstripper"

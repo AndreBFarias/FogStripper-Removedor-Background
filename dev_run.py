@@ -27,13 +27,20 @@ def run_pip_install(python_executable, packages):
 try:
     subprocess.run(["nvidia-smi"], capture_output=True, check=True)
     print(">> Detectada GPU NVIDIA. Usando CUDA.", flush=True)
-    REMBG_REQS = "src/requirements_rembg.txt"
-
-    TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cu117"]
+    TORCH_PACKAGES = [
+        "torch==2.0.1",
+        "torchvision==0.15.2",
+        "--index-url",
+        "https://download.pytorch.org/whl/cu118",
+    ]
 except (subprocess.CalledProcessError, FileNotFoundError):
     print(">> Nenhuma GPU NVIDIA detectada. Usando CPU.", flush=True)
-    REMBG_REQS = "src/requirements_rembg_cpu.txt"
-    TORCH_PACKAGES = ["torch==1.13.1", "torchvision==0.14.1", "--index-url", "https://download.pytorch.org/whl/cpu"]
+    TORCH_PACKAGES = [
+        "torch==2.0.1",
+        "torchvision==0.15.2",
+        "--index-url",
+        "https://download.pytorch.org/whl/cpu",
+    ]
 
 if not os.path.exists(VENV_DIR):
     print(f">> Criando ambiente de desenvolvimento isolado em: {VENV_DIR}", flush=True)

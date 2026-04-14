@@ -1,95 +1,144 @@
 <div align="center">
 
 [![opensource](https://badges.frapsoft.com/os/v1/open-source.png?v=103)](#)
-[![licença](https://img.shields.io/badge/licença-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![licenca](https://img.shields.io/badge/licenca-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Python](https://img.shields.io/badge/python-3.10+-green.svg)](https://www.python.org/)
-[![Estrelas](https://img.shields.io/github/stars/AndreBFarias/FogStripper.svg?style=social)](https://github.com/AndreBFarias/FogStripper/stargazers)
-[![Contribuições](https://img.shields.io/badge/contribuições-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
+[![Estrelas](https://img.shields.io/github/stars/[REDACTED]/FogStripper.svg?style=social)](https://github.com/[REDACTED]/FogStripper/stargazers)
+[![Contribuicoes](https://img.shields.io/badge/contribuicoes-bem--vindas-brightgreen.svg)](CONTRIBUTING.md)
+
 ---
 
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/icon.png" width="120" alt="Screenshot do FogStripper">
+<img src="https://raw.githubusercontent.com/[REDACTED]/FogStripper-Removedor-Background/main/assets/icon.png" width="120" alt="Icone do FogStripper">
 
-<h1 style="font-size: 2em;">FogStripper</h1>
+<h1>FogStripper</h1>
 
 </div>
 
 ---
 
-Uma aplicação gráfica para Linux forjada para sobreviver à entropia. Remove fundos de imagens e vídeos usando modelos de redes neurais que rodam localmente, com uma arquitetura modularizada que permite estabilidade e evita problemas de conflitos.
+Uma aplicacao grafica para Linux que remove fundos de imagens e videos usando modelos de redes neurais que rodam **localmente**, sem depender de servicos externos.
 
 ---
 
-<img src="https://raw.githubusercontent.com/AndreBFarias/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
+<img src="https://raw.githubusercontent.com/[REDACTED]/FogStripper-Removedor-Background/main/assets/Fogstripper.png" width="700" alt="Screenshot do FogStripper">
 
-### Funcionalidades
+---
 
--   **Arsenal de Modelos para Remoção de Fundo:** Escolha entre múltiplos modelos de `rembg` para cada tipo de tarefa, do mais rápido ao mais preciso:
-    -   `u2net` / `u2netp`: Equilíbrio ideal para uso geral e performance.
-    -   `u2net_human_seg`: Especializado em recorte de alta precisão de figuras humanas.
-    -   `isnet-general-use`: Modelo moderno para a melhor acurácia em objetos complexos.
+## Funcionalidades
 
--   **Upscaling de Alta Fidelidade (Real-ESRGAN):** Amplie a resolução das suas imagens, com opções de escala em **2x, 3x e 4x**, ou desative para máxima velocidade.
+**Remocao de fundo com multiplos modelos:**
+- `u2netp` — versao leve, mais rapida, ideal para uso geral
+- `u2net` — equilibrio entre velocidade e precisao
+- `u2net_human_seg` — especializado em figuras humanas
+- `isnet-general-use` — maxima precisao para objetos complexos
 
--   **Módulo de Pós-Processamento Integrado:** Dê o acabamento final diretamente na aplicação com um conjunto de ferramentas criativas:
-    -   **Composição de Fundo:** Substitua a transparência por uma **cor sólida** ou uma **imagem personalizada**.
-    -   **Projeção de Sombra:** Adicione um efeito de **sombra projetada** sutil, com controle de desfoque e opacidade para um resultado mais natural.
-    -   **Recorte Inteligente (Trim):** Opção para ajustar e recortar a imagem, removendo o excesso de área transparente ao redor do objeto.
-    -   **Preenchimento de Buracos:** Opção para preencher buracos internos no objeto detectado.
-    -   **Limpeza de Ruído:** Lógica avançada para remover artefatos e reflexos indesejados (Morphological Opening).
+**Upscaling com RealESRGAN:**
+- Ampliacao em **2x, 3x ou 4x** de resolucao
+- Controle de VRAM via tamanho de bloco (tile)
 
--   **Suporte Avançado a Animações:** Processe `GIFs` e `WEBMs` com a mesma precisão. O FogStripper trata cada quadro individualmente e oferece duas saídas:
-    -   Recompila a animação com o fundo removido.
-    -   Extrai todos os quadros processados como uma sequência de imagens estáticas (`.png`, `.svg`, etc.).
+**Pos-processamento integrado:**
+- Composicao de fundo com cor solida ou imagem personalizada
+- Sombra projetada com controle de desfoque e opacidade
+- Recorte inteligente (Trim) para remover excesso de transparencia
+- Preenchimento de buracos internos no objeto
+- Limpeza de ruido externo via morfologia
 
--   **Controle Fino de Recursos:**
-    -   **Potência (Borda):** Ajuste a agressividade do recorte para preservar detalhes finos ou garantir bordas limpas.
-    -   **Bloco (VRAM):** Controle o tamanho dos "tiles" do upscale para gerenciar o uso de VRAM e evitar erros em GPUs com menos memória.
+**Suporte a animacoes:**
+- Processa GIF e WEBM quadro a quadro
+- Exporta animacao recomposta ou sequencia de frames estaticos
 
--   **Exportação Flexível:** Salve seus resultados nos formatos `PNG`, `WEBP`, `SVG` (vetor real multicolorido!) ou `GIF`.
+**Exportacao:** PNG, WEBP, SVG (vetor multicolorido via vtracer), GIF
 
--   **Interface Intuitiva:** Arraste e solte seus arquivos, com feedback claro durante o processo e diálogos informativos de erro.
+---
 
--   **Arquitetura Resiliente:** A estabilidade é garantida por um sistema de três ambientes Python (`venv`) isolados, orquestrados para trabalhar em harmonia sem que as complexas dependências de ML entrem em conflito.
+## Arquitetura
 
+O FogStripper usa um **venv unificado** instalado em:
 
-### A Arquitetura
+```
+~/.local/share/fogstripper/venv/
+```
 
-O FogStripper tem três módulos principais. A estabilidade foi alcançada ao reconhecer que as bibliotecas de redes neurais modernas.
+Todas as dependencias — GUI, rembg, torch, RealESRGAN — coexistem neste unico
+ambiente. Os workers de processamento sao executados como subprocessos independentes,
+o que isola falhas sem exigir ambientes separados.
 
-1.  **Interface (`venv_gui`):** Onde a alma da aplicação (PyQt6) reside. Leve e ágil.
-2.  **Remoção da Névoa (`venv_rembg`):** Módulo isolado para `rembg`, que depende de um ecossistema específico de bibliotecas.
-3.  **Reino da Ampliação (`venv_upscale`):** Um universo congelado no tempo para `realesrgan` e suas versões precisas de `torch` e `numpy`, imune às quebras de compatibilidade do futuro.
+Os modelos U2Net sao armazenados em:
 
-Esta separação, forçada pelo script `install.sh`, é a razão pela qual o FogStripper funciona de forma consistentemente.
+```
+~/.local/share/fogstripper/models/u2net/
+```
 
-### Instalação
+Eles sao baixados automaticamente na primeira execucao de cada modelo.
 
-O script de instalação automatiza a criação de todos os reinos e dependências. Requer uma conexão com a internet.
+---
 
+## Instalacao
+
+Requer Python 3.10+ e conexao com a internet na primeira instalacao.
 
 ```bash
-# Clone este repositório
-git clone https://github.com/AndreBFarias/FogStripper-Removedor-Background.git
+git clone https://github.com/[REDACTED]/FogStripper-Removedor-Background.git
 cd FogStripper-Removedor-Background
 
-# Torne o instalador executável e execute-o
 chmod +x install.sh
 ./install.sh
 ```
 
-### Dependências do Projeto
+O instalador:
+1. Cria o venv em `~/.local/share/fogstripper/venv/`
+2. Instala PyTorch 2.0.1 + torchvision 0.15.2 (GPU ou CPU)
+3. Instala todas as demais dependencias
+4. Cria o atalho no menu de aplicativos
 
-As dependências do Python estão listadas no arquivo `requirements.txt` e são gerenciadas automaticamente pelo script de instalação.
-- **PyQt6** : Para a interface gráfica.
+Apos a instalacao, inicie pelo menu de aplicativos ou:
 
-- **rembg[gpu]** :  Para a remoção de fundo com aceleração de GPU.
+```bash
+PYTHONPATH=~/.local/share/fogstripper \
+~/.local/share/fogstripper/venv/bin/python3 \
+~/.local/share/fogstripper/src/main.py
+```
 
-- **Pillow** : Para a manipulação de imagens.
+---
 
-### Uso
-- Arraste e solte imagens na janela ou clique em "Selecione Imagens".
-- Ajuste a potência da GPU com o slider, sentindo o controle pulsar.
-- A imagem processada surge com o sufixo _despido.png, e uma mensagem te guia até a pasta de saída.
+## Uso
 
-### Licença GLP
-Livre para modificar e usar da forma que preferir desde que tudo permaneça livre.
+1. Arraste imagens para a janela ou clique na area de drop para selecionar arquivos
+2. Configure o modelo, formato de saida e potencia de borda
+3. Ative o pos-processamento se desejar fundo, sombra ou recorte
+4. Confirme no dialogo de opcoes
+5. O resultado e salvo no mesmo diretorio da imagem original
+   (o arquivo original e preservado com sufixo `.bak`)
+
+---
+
+## Dependencias Principais
+
+| Pacote | Versao | Funcao |
+|--------|--------|--------|
+| PyQt6 | 6.10.0 | Interface grafica |
+| rembg | 2.0.60 | Remocao de fundo |
+| onnxruntime | 1.23.2 | Inferencia dos modelos |
+| torch | 2.0.1 | Backend do RealESRGAN |
+| torchvision | 0.15.2 | Auxiliar do torch |
+| basicsr | >=1.4.2 | Arquitetura RRDBNet |
+| realesrgan | >=0.3.0 | Upscaling |
+| Pillow | >=9.0.0 | Manipulacao de imagens |
+| opencv-python | >=4.8.0 | Processamento de mascara |
+| vtracer | >=0.6.0 | Vetorizacao SVG |
+
+---
+
+## Desinstalacao
+
+```bash
+~/.local/share/fogstripper/uninstall.sh
+```
+
+---
+
+## Licenca
+
+GPLv3 — livre para modificar e usar desde que tudo permanca livre.
+
+Consulte o arquivo [LICENSE](LICENSE) para os termos completos.
