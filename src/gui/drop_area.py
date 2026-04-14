@@ -8,18 +8,25 @@ from PyQt6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QPushButton,
     QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
-from src.gui.constants import ALL_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
+from src.gui.constants import IMAGE_EXTENSIONS, VIDEO_EXTENSIONS
 
 
 class DropArea(QFrame):
-    def __init__(self, on_files_selected: Callable[[list[str]], None]) -> None:
+    def __init__(
+        self,
+        on_files_added: Callable[[list[str]], None],
+        on_process_requested: Callable[[], None],
+    ) -> None:
         super().__init__()
-        self._on_files_selected = on_files_selected
+        self._on_files_added = on_files_added
+        self._on_process_requested = on_process_requested
+        self._current_files: list[str] = []
         self._setup_ui()
 
     def _setup_ui(self) -> None:
@@ -38,13 +45,21 @@ class DropArea(QFrame):
             }
         """)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setSpacing(0)
+
+        # Área de seleção e preview — 75% da largura
+        left_widget = QWidget()
+        left_widget.setStyleSheet("background: transparent;")
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.placeholder_label = QLabel("Selecione ou arraste suas imagens aqui!")
         self.placeholder_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.placeholder_label.setStyleSheet("border: none; color: #aaa; font-size: 14px;")
-        layout.addWidget(self.placeholder_label)
+        left_layout.addWidget(self.placeholder_label)
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
@@ -60,19 +75,93 @@ class DropArea(QFrame):
         self.preview_layout.setSpacing(8)
         self.preview_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.scroll_area.setWidget(self.preview_container)
-        layout.addWidget(self.scroll_area)
+        left_layout.addWidget(self.scroll_area)
+
+        main_layout.addWidget(left_widget, 15)
+
+        # Espaçador — 5% da largura
+        spacer = QWidget()
+        spacer.setStyleSheet("background: transparent;")
+        main_layout.addWidget(spacer, 1)
+
+        # Coluna de botões — 20% da largura
+        self._buttons_widget = QWidget()
+        self._buttons_widget.setStyleSheet("background: transparent;")
+        buttons_layout = QVBoxLayout(self._buttons_widget)
+        buttons_layout.setContentsMargins(0, 0, 0, 0)
+        buttons_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        buttons_layout.setSpacing(10)
+
+        self.btn_processar = QPushButton("Processar")
+        self.btn_processar.setEnabled(False)
+        self.btn_processar.setFixedHeight(28)
+        self.btn_processar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_processar.setStyleSheet("""
+            QPushButton {
+                background: #50fa7b;
+                color: #282a36;
+                border: none;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 2px 8px;
+            }
+            QPushButton:hover { background: #5af78e; }
+            QPushButton:disabled { background: #44475a; color: #6272a4; }
+        """)
+        self.btn_processar.clicked.connect(self._on_processar_clicked)
+        buttons_layout.addWidget(self.btn_processar)
+
+        self.btn_limpar = QPushButton("Limpar")
+        self.btn_limpar.setEnabled(False)
+        self.btn_limpar.setFixedHeight(28)
+        self.btn_limpar.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_limpar.setStyleSheet("""
+            QPushButton {
+                background: #ff5555;
+                color: #f8f8f2;
+                border: none;
+                border-radius: 6px;
+                font-weight: bold;
+                font-size: 12px;
+                padding: 2px 8px;
+            }
+            QPushButton:hover { background: #ff6e6e; }
+            QPushButton:disabled { background: #44475a; color: #6272a4; }
+        """)
+        self.btn_limpar.clicked.connect(self.clear)
+        buttons_layout.addWidget(self.btn_limpar)
+
+        main_layout.addWidget(self._buttons_widget, 4)
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
-            self._open_file_dialog()
+            if not self._buttons_widget.geometry().contains(event.pos()):
+                self._open_file_dialog()
 
     def _open_file_dialog(self) -> None:
         video_exts = " ".join([f"*{ext}" for ext in VIDEO_EXTENSIONS])
         image_exts = " ".join([f"*{ext}" for ext in IMAGE_EXTENSIONS])
-        filter_str = f"Imagens e Videos ({image_exts} {video_exts})"
+        filter_str = f"Imagens e Vídeos ({image_exts} {video_exts})"
         paths, _ = QFileDialog.getOpenFileNames(self, "Selecione as Imagens", "", filter_str)
         if paths:
-            self._on_files_selected(paths)
+            self._register_files(paths)
+
+    def _register_files(self, paths: list[str]) -> None:
+        self._current_files = list(paths)
+        self.update_preview(paths)
+        self._on_files_added(paths)
+        self.btn_processar.setEnabled(True)
+        self.btn_limpar.setEnabled(True)
+
+    def add_files(self, paths: list[str]) -> None:
+        """Registra arquivos externamente (drag-and-drop na janela principal)."""
+        if paths:
+            self._register_files(paths)
+
+    def _on_processar_clicked(self) -> None:
+        if self._current_files:
+            self._on_process_requested()
 
     def update_preview(self, paths: list[str]) -> None:
         while self.preview_layout.count():
@@ -121,4 +210,7 @@ class DropArea(QFrame):
             self.preview_layout.addWidget(more)
 
     def clear(self) -> None:
+        self._current_files.clear()
+        self.btn_processar.setEnabled(False)
+        self.btn_limpar.setEnabled(False)
         self.update_preview([])

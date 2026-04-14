@@ -101,7 +101,7 @@ class FogStripperWindow(QWidget):
         container_layout = QHBoxLayout(container)
         container_layout.setContentsMargins(30, 0, 30, 0)
 
-        self.drop_area = DropArea(self.start_file_processing)
+        self.drop_area = DropArea(self._on_files_added, self._start_processing)
         container_layout.addWidget(self.drop_area)
         layout.addWidget(container)
 
@@ -145,24 +145,27 @@ class FogStripperWindow(QWidget):
     def dropEvent(self, event: QDropEvent) -> None:
         paths = [u.toLocalFile() for u in event.mimeData().urls() if u.toLocalFile().lower().endswith(ALL_EXTENSIONS)]
         if paths:
-            self.start_file_processing(paths)
+            self.drop_area.add_files(paths)
 
-    def start_file_processing(self, paths: list[str]) -> None:
-        if not paths:
-            return
-
+    def _on_files_added(self, paths: list[str]) -> None:
         self.files_to_process = paths
-        self.drop_area.update_preview(paths)
-
         is_animated = any(p.lower().endswith(VIDEO_EXTENSIONS) for p in paths)
         self.settings_panel.upscale_group.setEnabled(not is_animated)
         self.post_panel.frame.setEnabled(not is_animated)
+
+    def _start_processing(self) -> None:
+        paths = self.files_to_process
+        if not paths:
+            return
+
+        is_animated = any(p.lower().endswith(VIDEO_EXTENSIONS) for p in paths)
 
         if is_animated:
             msg = create_styled_message_box(self, "Confirmar Processamento", f"Processar {len(paths)} imagem(ns)?")
             msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             if msg.exec() == QMessageBox.StandardButton.No:
                 self.files_to_process.clear()
+                self.drop_area.clear()
                 return
             self.crop_option = "original"
             self.fill_holes_option = False
@@ -170,6 +173,7 @@ class FogStripperWindow(QWidget):
             dialog = ProcessingOptionsDialog(self, len(paths))
             if dialog.exec() == QDialog.DialogCode.Rejected:
                 self.files_to_process.clear()
+                self.drop_area.clear()
                 return
             self.crop_option = dialog.get_crop_option()
             self.fill_holes_option = dialog.get_fill_holes_option()
