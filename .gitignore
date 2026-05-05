@@ -75,3 +75,20 @@ models/u2net/
 
 # Sprints concluidas
 SPRINT_*.md
+
+# --- anti-IA (anonimato local) ---
+AGENTS.md
+GEMINI.md
+COPILOT.md
+HANDOFF-PROMPT.md
+HANDOFF.md
+HOW_TO_RESUME.md
+VALIDATOR_BRIEF.md
+STATE.md
+.cursorrules
+.windsurfrules
+.claude/
+.cursor/
+.aider*
+.continue/
+.github/copilot-instructions.md
