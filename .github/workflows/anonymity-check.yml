@@ -70,6 +70,7 @@ jobs:
             COMMITTER_EMAIL=$(git log -1 --pretty=format:'%ce' "$SHA")
             SUBJECT=$(printf '%s\n' "$MSG" | head -1)
 
+            if printf '%s\n' "$MSG" | grep -qiE '^(Co''-Authored-By|Paired''-with|Assisted''-by):'".*($TOOL_RE|$NOREPLY_RE)"; then
               echo "::error::commit $SHA tem trailer de coautoria com IA"
               FAIL=1
             fi
