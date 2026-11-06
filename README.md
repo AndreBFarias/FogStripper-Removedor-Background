@@ -53,21 +53,23 @@ Uma aplicacao grafica para Linux que remove fundos de imagens e videos usando mo
 
 ## Arquitetura
 
-O FogStripper usa um **venv unificado** instalado em:
+O FogStripper roda da própria pasta do projeto, com um **venv unificado** em:
 
 ```
-~/.local/share/fogstripper/venv/
+venv/
 ```
 
 Todas as dependencias — GUI, rembg, torch, RealESRGAN — coexistem neste unico
 ambiente. Os workers de processamento sao executados como subprocessos independentes,
 o que isola falhas sem exigir ambientes separados.
 
-Os modelos U2Net sao armazenados em:
+Os modelos U2Net são armazenados em:
 
 ```
-~/.local/share/fogstripper/models/u2net/
+models/u2net/
 ```
+
+`config.json`, `app.log`, `venv/` e `models/` ficam na raiz do projeto, fora do git.
 
 Eles sao baixados automaticamente na primeira execucao de cada modelo.
 
@@ -75,7 +77,7 @@ Eles sao baixados automaticamente na primeira execucao de cada modelo.
 
 ## Instalacao
 
-Requer Python 3.10+ e conexao com a internet na primeira instalacao.
+Requer Python 3.10 (`uv python install 3.10`) e conexão com a internet na primeira instalação.
 
 ```bash
 git clone https://github.com/[REDACTED]/FogStripper-Removedor-Background.git
@@ -86,7 +88,7 @@ chmod +x install.sh
 ```
 
 O instalador:
-1. Cria o venv em `~/.local/share/fogstripper/venv/`
+1. Cria o venv em `venv/`, na pasta do projeto
 2. Instala PyTorch 2.0.1 + torchvision 0.15.2 (GPU ou CPU)
 3. Instala todas as demais dependencias
 4. Cria o atalho no menu de aplicativos
@@ -94,9 +96,7 @@ O instalador:
 Apos a instalacao, inicie pelo menu de aplicativos ou:
 
 ```bash
-PYTHONPATH=~/.local/share/fogstripper \
-~/.local/share/fogstripper/venv/bin/python3 \
-~/.local/share/fogstripper/src/main.py
+PYTHONPATH=. venv/bin/python3 src/main.py
 ```
 
 ---
@@ -132,8 +132,10 @@ PYTHONPATH=~/.local/share/fogstripper \
 ## Desinstalacao
 
 ```bash
-~/.local/share/fogstripper/uninstall.sh
+./uninstall.sh
 ```
+
+Remove o atalho, os ícones, o `venv/` e os modelos. O código continua na pasta.
 
 ---
 

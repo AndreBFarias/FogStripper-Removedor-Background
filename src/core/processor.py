@@ -46,8 +46,11 @@ class ProcessThread(QThread):
     def run_command(self, command: list[str | None]) -> bool:
         cmd: list[str] = [c for c in command if c is not None]
         logger.info(f"Executando: {' '.join(cmd)}")
+        env: dict[str, str] = os.environ.copy()
+        if PATHS.get("U2NET_HOME"):
+            env["U2NET_HOME"] = PATHS["U2NET_HOME"]
         try:
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True, encoding="utf-8")
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, encoding="utf-8", env=env)
             if result.stdout:
                 logger.info(f"Saida do worker: {result.stdout.strip()}")
             if result.stderr:

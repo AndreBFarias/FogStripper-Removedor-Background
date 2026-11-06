@@ -1,6 +1,7 @@
 #!/bin/bash
 
-APP_DIR="$HOME/.local/share/fogstripper"
+APP_DIR=$(cd "$(dirname "$0")" && pwd)
+LEGACY_DIR="$HOME/.local/share/fogstripper"
 DESKTOP_FILE="$HOME/.local/share/applications/fogstripper.desktop"
 ICON_DIR_BASE="$HOME/.local/share/icons/hicolor"
 
@@ -9,11 +10,13 @@ echo "  FOGSTRIPPER - DESINSTALACAO"
 echo "============================================================"
 echo ""
 
-if [ -d "$APP_DIR" ]; then
-    echo ">> Removendo arquivos da aplicacao em $APP_DIR..."
-    rm -rf "$APP_DIR"
-else
-    echo ">> Diretorio da aplicacao nao encontrado (ja removido?)."
+echo ">> Removendo ambiente da aplicação em $APP_DIR (o código fica)..."
+rm -rf "$APP_DIR/venv" "$APP_DIR/models/u2net"
+rm -f "$APP_DIR/config.json" "$APP_DIR/app.log" "$APP_DIR/app.log.old"
+
+if [ -d "$LEGACY_DIR" ]; then
+    echo ">> Removendo instalação antiga em $LEGACY_DIR..."
+    rm -rf "$LEGACY_DIR"
 fi
 
 if [ -f "$DESKTOP_FILE" ]; then

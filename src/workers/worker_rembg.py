@@ -3,12 +3,10 @@ import os
 from argparse import Namespace
 from pathlib import Path
 
-_MODELS_DIR = Path(
-    os.environ.get(
-        "U2NET_HOME",
-        str(Path.home() / ".local" / "share" / "fogstripper" / "models" / "u2net"),
-    )
-)
+_PROJECT_DIR = Path(__file__).resolve().parents[2]
+# Flatpak e AppImage rodam de um diretório somente leitura.
+_DEFAULT_ROOT = _PROJECT_DIR if os.access(_PROJECT_DIR, os.W_OK) else Path.home() / ".local" / "share" / "fogstripper"
+_MODELS_DIR = Path(os.environ.get("U2NET_HOME", str(_DEFAULT_ROOT / "models" / "u2net")))
 os.environ["U2NET_HOME"] = str(_MODELS_DIR)
 _MODELS_DIR.mkdir(parents=True, exist_ok=True)
 

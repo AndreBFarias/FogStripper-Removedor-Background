@@ -5,6 +5,19 @@ Todas as mudancas notaveis neste projeto serao documentadas aqui.
 O formato e baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [Não lançado]
+
+### Alterado
+- O app roda da pasta do projeto: `venv/`, `models/`, `config.json` e `app.log` saem de `~/.local/share/fogstripper`
+- `install.sh` usa `python3.10` e reaproveita o `venv/` existente
+- `dev_run.py` usa o mesmo `venv/`, sem `.dev_venv` separado
+
+### Corrigido
+- `U2NET_HOME` do `config.json` agora chega aos workers
+- `config.json` do Flatpak e do AppImage agora é encontrado
+
+---
+
 ## [1.2.0] - 2026-04-13
 
 ### Adicionado

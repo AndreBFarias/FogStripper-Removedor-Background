@@ -1,3 +1,4 @@
+import importlib
 import logging
 import os
 from pathlib import Path
@@ -51,3 +52,20 @@ class TestLoggerConfig:
                 root_logger: logging.Logger = logging.getLogger()
                 handler_types = [type(h).__name__ for h in root_logger.handlers]
                 assert any("File" in t or "Rotating" in t for t in handler_types)
+
+    def test_log_dir_is_project_root_when_writable(self) -> None:
+        project_root: Path = Path(__file__).resolve().parents[2]
+        with patch("os.access", return_value=True):
+            importlib.reload(logger_config)
+        try:
+            assert Path(logger_config.LOG_DIR) == project_root
+        finally:
+            importlib.reload(logger_config)
+
+    def test_log_dir_falls_back_to_home_when_project_is_read_only(self) -> None:
+        with patch("os.access", return_value=False):
+            importlib.reload(logger_config)
+        try:
+            assert logger_config.LOG_DIR == os.path.expanduser("~/.local/share/fogstripper")
+        finally:
+            importlib.reload(logger_config)

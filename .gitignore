@@ -22,6 +22,7 @@ lib/
 # Ignora arquivos criados dinamicamente pelos scripts do projeto.
 assets/generated_icons/
 config.dev.json
+config.json
 
 # --- Logs e Diagnósticos ---
 # Ignora arquivos de log e relatórios de diagnóstico.

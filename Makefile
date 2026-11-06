@@ -1,6 +1,6 @@
 .PHONY: help install dev test lint format typecheck security clean run docker-test docker-lint docker-all health
 
-PYTHON := python3
+PYTHON := python3.10
 VENV := venv
 PIP := $(VENV)/bin/pip
 PYTEST := $(VENV)/bin/pytest

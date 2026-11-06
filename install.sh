@@ -10,8 +10,10 @@ echo "============================================================"
 echo ""
 
 # Definir diretorios
-APP_DIR="$HOME/.local/share/fogstripper"
-PROJECT_ROOT=$(pwd)
+# O app roda da própria pasta do projeto: venv, modelos, config e log moram aqui.
+APP_DIR=$(cd "$(dirname "$0")" && pwd)
+PROJECT_ROOT="$APP_DIR"
+cd "$APP_DIR"
 VENV_DIR="$APP_DIR/venv"
 PYTHON_EXEC="$VENV_DIR/bin/python3"
 
@@ -21,15 +23,14 @@ export TMPDIR="$HOME/.pip_tmp_fogstripper"
 mkdir -p "$TMPDIR"
 echo ">> Configurando diretorio temporario: $TMPDIR"
 
-# Limpar instalacao antiga
-if [ -d "$APP_DIR" ]; then
-    echo ">> Removendo instalacao anterior..."
-    rm -rf "$APP_DIR"
+# torch 2.0.1 só existe até o Python 3.11; o python3 do sistema pode ser mais novo.
+if ! command -v python3.10 > /dev/null; then
+    echo "ERRO: python3.10 não encontrado. Instale com: uv python install 3.10"
+    exit 1
 fi
-mkdir -p "$APP_DIR"
 
 echo ">> Gerando icones..."
-python3 -m venv "$VENV_DIR"
+[ -x "$PYTHON_EXEC" ] || python3.10 -m venv "$VENV_DIR"
 "$PYTHON_EXEC" -m pip install --upgrade pip setuptools wheel > /dev/null
 "$PYTHON_EXEC" -m pip install Pillow > /dev/null
 "$PYTHON_EXEC" "$PROJECT_ROOT/src/utils/icon_resizer.py" "$PROJECT_ROOT"
@@ -62,13 +63,6 @@ cat > "$APP_DIR/config.json" << EOL
     "U2NET_HOME": "$APP_DIR/models/u2net"
 }
 EOL
-
-# Copiando arquivos fonte
-echo ">> Copiando arquivos..."
-mkdir -p "$APP_DIR/src"
-cp -r ./src/* "$APP_DIR/src/"
-cp -r ./assets "$APP_DIR/"
-cp ./uninstall.sh "$APP_DIR/" && chmod +x "$APP_DIR/uninstall.sh"
 
 echo ">> Criando diretorio de modelos..."
 mkdir -p "$APP_DIR/models/u2net"

@@ -2,7 +2,9 @@ import logging
 import os
 import sys
 
-LOG_DIR: str = os.path.expanduser("~/.local/share/fogstripper")
+_PROJECT_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+# Flatpak e AppImage rodam de um diretório somente leitura.
+LOG_DIR: str = _PROJECT_DIR if os.access(_PROJECT_DIR, os.W_OK) else os.path.expanduser("~/.local/share/fogstripper")
 LOG_FILE: str = os.path.join(LOG_DIR, "app.log")
 
 

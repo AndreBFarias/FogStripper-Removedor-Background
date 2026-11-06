@@ -49,3 +49,7 @@ class TestConfigLoader:
 
     def test_config_path_is_absolute(self) -> None:
         assert os.path.isabs(config_loader.CONFIG_PATH)
+
+    def test_config_path_lives_in_project_root(self) -> None:
+        project_root: Path = Path(__file__).resolve().parents[2]
+        assert Path(config_loader.CONFIG_PATH) == project_root / "config.json"

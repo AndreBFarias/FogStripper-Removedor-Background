@@ -57,7 +57,7 @@ modules:
 
       # --- Gerando o config.json para o ambiente Flatpak ---
       - |
-        cat > "/app/src/config.json" << EOL
+        cat > "/app/config.json" << EOL
         {
             "PYTHON_REMBG": "/app/venv/bin/python3",
             "PYTHON_UPSCALE": "/app/venv/bin/python3",

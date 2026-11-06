@@ -11,7 +11,7 @@ print("=" * 60, flush=True)
 print(flush=True)
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-VENV_DIR = os.path.join(PROJECT_ROOT, ".dev_venv")
+VENV_DIR = os.path.join(PROJECT_ROOT, "venv")
 os.chdir(PROJECT_ROOT)
 
 
@@ -94,6 +94,7 @@ dev_config = {
     "UPSCALE_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_upscale.py"),
     "EFFECTS_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_effects.py"),
     "BACKGROUND_SCRIPT": os.path.join(PROJECT_ROOT, "src", "workers", "worker_background.py"),
+    "U2NET_HOME": os.path.join(PROJECT_ROOT, "models", "u2net"),
 }
 print(f">> Criando configuracao de desenvolvimento em: {config_path}", flush=True)
 with open(config_path, "w") as f:

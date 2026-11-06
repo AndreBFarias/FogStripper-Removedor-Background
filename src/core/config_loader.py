@@ -5,12 +5,12 @@ from typing import Any
 
 logger: logging.Logger = logging.getLogger(__name__)
 
+APP_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
 if os.getenv("FOGSTRIPPER_DEV_MODE"):
     logger.warning("MODO DE DESENVOLVIMENTO ATIVADO!")
-    APP_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     CONFIG_PATH: str = os.path.join(APP_DIR, "config.dev.json")
 else:
-    APP_DIR: str = os.path.expanduser("~/.local/share/fogstripper")
     CONFIG_PATH: str = os.path.join(APP_DIR, "config.json")
 
 PATHS: dict[str, Any] = {}

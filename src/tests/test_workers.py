@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -149,3 +150,17 @@ class TestWorkerUpscale:
             with Image.open(output_path) as img:
                 assert img.width == 200
                 assert img.height == 200
+
+
+class TestRembgModelsDir:
+    def test_default_models_dir_is_inside_project(self) -> None:
+        project_root: Path = Path(__file__).resolve().parents[2]
+        check: str = (
+            "import runpy, sys; sys.modules['rembg'] = __import__('types').SimpleNamespace(new_session=None, remove=None); "
+            "m = runpy.run_path('src/workers/worker_rembg.py', run_name='prova'); print(m['_MODELS_DIR'])"
+        )
+        env: dict[str, str] = {k: v for k, v in os.environ.items() if k != "U2NET_HOME"}
+        result = subprocess.run(
+            [sys.executable, "-c", check], capture_output=True, text=True, check=True, cwd=project_root, env=env
+        )
+        assert Path(result.stdout.strip()) == project_root / "models" / "u2net"

@@ -1,4 +1,5 @@
 import os
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -25,6 +26,17 @@ class TestProcessThread:
                 "background_data": None,
             },
         )
+
+    def test_run_command_hands_u2net_home_from_config_to_worker(self, processor: ProcessThread) -> None:
+        check: str = "import os, sys; sys.exit(os.environ.get('U2NET_HOME') != '/modelos/teste')"
+        with patch.dict("src.core.processor.PATHS", {"U2NET_HOME": "/modelos/teste"}):
+            assert processor.run_command([sys.executable, "-c", check]) is True
+
+    def test_run_command_leaves_environment_alone_without_u2net_home(self, processor: ProcessThread) -> None:
+        check: str = "import os, sys; sys.exit('U2NET_HOME' in os.environ)"
+        with patch.dict(os.environ) as env, patch.dict("src.core.processor.PATHS", clear=True):
+            env.pop("U2NET_HOME", None)
+            assert processor.run_command([sys.executable, "-c", check]) is True
 
     def test_init_creates_temp_dir(self, processor: ProcessThread) -> None:
         assert processor.temp_dir is not None
